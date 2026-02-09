@@ -406,13 +406,13 @@ function RankingView({ data, fields }) {
 
   if (data.length === 0) return <div className="text-center p-10 text-slate-500">Sem dados.</div>;
 
-  const PODIUM_LIMIT = 9;
-  const podiumData = data.slice(0, PODIUM_LIMIT);
-  const rest = data.slice(PODIUM_LIMIT);
+  const maxTotal = data.reduce((max, item) => Math.max(max, item.total), 0);
+  const podiumData = data.filter(item => item.total === maxTotal);
+  const rest = data.filter(item => item.total < maxTotal);
 
   return (
     <div className="space-y-12">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-center items-end">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-center items-stretch auto-rows-fr">
         {podiumData.map((item, idx) => (
             <PodiumCard key={idx} rank={item.rank} data={item} />
         ))}
@@ -496,7 +496,7 @@ function PodiumCard({ rank, data }) {
 
   return (
     <div className={`
-      relative flex flex-col items-center justify-center p-6 rounded-2xl border transition-all duration-300 hover:-translate-y-1
+      relative flex flex-col items-center justify-center p-6 rounded-2xl border transition-all duration-300 hover:-translate-y-1 h-full
       ${styles.card} ${styles.height} ${styles.glow}
     `}>
       <div className="absolute top-4 right-4 text-[10px] font-bold opacity-40 uppercase tracking-widest border border-current px-2 py-0.5 rounded-full">
