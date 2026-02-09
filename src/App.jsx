@@ -423,7 +423,7 @@ function RankingView({ data, fields }) {
     <div className="space-y-10">
       <div className="flex items-center justify-between">
         <h2 className="text-sm uppercase tracking-[0.35em] text-slate-400 font-bold">Podio</h2>
-        <div className="text-xs text-slate-500 uppercase tracking-widest">Empate maximo</div>
+        <div className="text-xs text-slate-500 uppercase tracking-widest">{podiumData.length} duplas no podio</div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-center items-stretch auto-rows-fr">
