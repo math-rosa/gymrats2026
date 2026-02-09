@@ -310,6 +310,14 @@ export default function App() {
         <div className="absolute top-[-10%] left-[20%] w-[500px] h-[500px] bg-yellow-600/10 rounded-full blur-[100px]" />
         <div className="absolute bottom-[-10%] right-[20%] w-[400px] h-[400px] bg-indigo-900/20 rounded-full blur-[100px]" />
       </div>
+      <div
+        className="fixed inset-0 pointer-events-none z-0 opacity-30"
+        style={{
+          backgroundImage:
+            'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)',
+          backgroundSize: '36px 36px'
+        }}
+      />
 
       <header className="relative z-10 border-b border-slate-800/60 bg-slate-950/80 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -387,7 +395,8 @@ export default function App() {
       </main>
 
        <footer className="relative z-10 border-t border-slate-900 py-8 mt-12 text-center">
-          <p className="text-slate-600 text-xs uppercase tracking-widest">Painel de Competicao • Temporada 2026</p>
+         <p className="text-slate-600 text-xs uppercase tracking-widest">Painel de Competicao • Temporada 2026</p>
+         <p className="text-slate-600 text-xs uppercase tracking-widest mt-2">Desenvolvido por Math Rosa</p>
        </footer>
     </div>
   );
@@ -411,12 +420,25 @@ function RankingView({ data, fields }) {
   const rest = data.filter(item => item.total < maxTotal);
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-10">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm uppercase tracking-[0.35em] text-slate-400 font-bold">Podio</h2>
+        <div className="text-xs text-slate-500 uppercase tracking-widest">Empate maximo</div>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-center items-stretch auto-rows-fr">
         {podiumData.map((item, idx) => (
             <PodiumCard key={idx} rank={item.rank} data={item} />
         ))}
       </div>
+
+      {rest.length > 0 && (
+        <div className="flex items-center gap-4">
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
+          <span className="text-[10px] uppercase tracking-[0.35em] text-slate-500">Restante</span>
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
+        </div>
+      )}
 
       {rest.length > 0 && (
         <div className="bg-slate-900/50 rounded-2xl border border-slate-800/60 overflow-hidden backdrop-blur-sm">
@@ -438,8 +460,22 @@ function RankingView({ data, fields }) {
                     )}
                 </div>
 
-                <div className="flex-1 font-medium text-slate-300 group-hover:text-white transition-colors tracking-tight">
-                    {item.name}
+                <div className="flex-1">
+                  <div className="font-medium text-slate-300 group-hover:text-white transition-colors tracking-tight">
+                      {item.name}
+                  </div>
+                  {item.members?.length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      {item.members.map((member, i) => (
+                        <span
+                          key={i}
+                          className="text-[10px] uppercase tracking-wide text-slate-400 bg-slate-900/70 border border-slate-800 px-2 py-0.5 rounded-full"
+                        >
+                          {member.formattedName}: {member.points} pts
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="font-mono font-bold text-slate-400 bg-slate-950 px-3 py-1 rounded-md text-sm border border-slate-800 group-hover:border-yellow-900/30 group-hover:text-yellow-500 transition-all">
                   {item.total} pts
