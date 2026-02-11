@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Loader2, AlertCircle, Trophy, Medal, Crown, Users, Calendar, Timer, Instagram, Dumbbell, Footprints, Zap, Bike, Flame, Swords, Mountain, RotateCw, Waves, Activity } from 'lucide-react';
+import { Loader2, AlertCircle, Trophy, Medal, Crown, Users, Calendar, Timer, Instagram, Dumbbell, Footprints, Zap, Bike, Flame, Swords, Mountain, RotateCw, Waves, Activity, Route } from 'lucide-react';
 
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRAQdbRC3Pj39q2uwzwzcIMXHjnebOgEiWCEClH6RTEt_7bG3arvWLjng8MIqz-KrbpM8T_r8PHyYgh/pub?gid=761223336&single=true&output=csv";
 const FEED_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7yHWFR9qtahU0vlYZ_QKi24OUChWc5kW93NvTHIZMG4rdp5ED5iOkHTwFAxVc8TxPUlxGudvdDduE/pub?gid=53383827&single=true&output=csv";
@@ -29,7 +29,7 @@ const ACTIVITY_MAP = {
 };
 
 // Cores alternadas para o grafico
-const ACTIVITY_COLORS = ['#A855F7', '#00FFB6', '#A855F7'];
+const ACTIVITY_COLORS = ['#00FFB6'];
 
 // Configuracoes do Desafio
 const CHALLENGE_START = new Date('2026-02-01T00:00:00');
@@ -86,7 +86,10 @@ const csvToJson = (csvData) => {
 
 const guessFieldRoles = (headers) => {
   const roles = {
-    title: headers.find(h => /nome|name|title|titulo|modelo|produto/i.test(h)) || headers[0],
+    title: headers.find(h => /participante|atleta|membro|jogador/i.test(h)) ||
+      headers.find(h => /(?<!time\s)(?<!team\s)(nome|name)(?!.*(time|team|equipe|dupla|pair))/i.test(h)) ||
+      headers.find(h => /nome|name|title|titulo|modelo|produto/i.test(h)) ||
+      headers[0],
     image: headers.find(h => /img|image|foto|pic|url|src|thumbnail/i.test(h)),
     points: headers.find(h => /ponto|point|score|nota|pts|total|dias/i.test(h)),
     pair: headers.find(h => /dupla|pair|equipe|team|time|participante/i.test(h))
@@ -487,14 +490,14 @@ export default function App() {
                 </div>
                 <span className="text-[9px] uppercase tracking-widest text-gray-500 font-semibold">kcal queimadas</span>
               </div>
-              <div className="relative bg-white/[0.03] px-5 py-2.5 rounded-xl border border-white/[0.06] text-center overflow-hidden flex flex-col justify-center w-[140px]">
+              <div className="relative bg-white/[0.03] px-2 py-2.5 rounded-xl border border-white/[0.06] text-center overflow-hidden flex flex-col justify-center w-[140px]">
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#00FFB6] to-[#00FFB6]/40" />
-                <div className="flex items-center gap-2 justify-center">
-                  <Footprints className="w-5 h-5 text-[#00FFB6]" />
-                  <span className="text-xl font-black text-white"><AnimatedNumber value={bigNumbers.totalDistanceKm} /></span>
-                  <span className="text-xs text-gray-500 font-semibold">km</span>
+                <div className="flex items-center justify-center gap-1.5">
+                  <Route className="w-6 h-6 text-[#00FFB6] shrink-0" />
+                  <span className="text-xl font-black text-white leading-none"><AnimatedNumber value={bigNumbers.totalDistanceKm} /></span>
+                  <span className="text-xs text-gray-500 font-semibold self-end mb-0.5">km</span>
                 </div>
-                <span className="text-[9px] uppercase tracking-widest text-gray-500 font-semibold">percorridos</span>
+                <span className="text-[9px] uppercase tracking-widest text-gray-500 font-semibold mt-0.5">percorridos</span>
               </div>
 
 
@@ -601,7 +604,7 @@ export default function App() {
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#742CFF]/30 to-transparent" />
           <div className="flex items-center justify-center gap-4">
             <p className="text-gray-600 text-[10px] uppercase tracking-widest">Painel de Competição <span className="text-[#742CFF]">•</span> Temporada 2026 <span className="text-[#00FFB6]">•</span> Desenvolvido por Math Rosa</p>
-            <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-[#742CFF] transition-colors"><Instagram className="w-3.5 h-3.5" /></a>
+
           </div>
         </footer>
       </div>
@@ -735,7 +738,7 @@ function PodiumCard({ rank, data, animDelay = 0 }) {
     styles = {
       card: 'bg-gradient-to-r from-brand/10 via-brand/5 to-transparent border-brand/30 text-white ring-1 ring-brand/10',
       iconColor: 'text-accent',
-      badge: 'bg-gradient-to-br from-brand to-brand-600 text-white border-brand/50 font-bold',
+      badge: 'bg-brand/10 text-brand-300 border-brand/20 backdrop-blur-md shadow-[0_0_15px_-3px_rgba(116,44,255,0.3)]',
       glow: 'shadow-[0_0_40px_-10px_rgba(116,44,255,0.25)]',
       accentText: 'text-accent',
     };
@@ -743,7 +746,7 @@ function PodiumCard({ rank, data, animDelay = 0 }) {
     styles = {
       card: 'bg-gradient-to-r from-white/[0.04] to-transparent border-white/10 text-gray-200',
       iconColor: 'text-gray-400',
-      badge: 'bg-gray-200 text-gray-900 border-gray-300 font-bold',
+      badge: 'bg-white/5 text-gray-300 border-white/10 backdrop-blur-md shadow-[0_0_15px_-3px_rgba(255,255,255,0.1)]',
       glow: 'shadow-[0_0_20px_-5px_rgba(255,255,255,0.05)]',
       accentText: 'text-gray-400',
     };
@@ -751,7 +754,7 @@ function PodiumCard({ rank, data, animDelay = 0 }) {
     styles = {
       card: 'bg-gradient-to-r from-amber-900/10 to-transparent border-amber-800/30 text-amber-100',
       iconColor: 'text-amber-500',
-      badge: 'bg-amber-600 text-amber-100 border-amber-500 font-bold',
+      badge: 'bg-amber-500/10 text-amber-200 border-amber-500/20 backdrop-blur-md shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]',
       glow: 'shadow-[0_0_20px_-5px_rgba(245,158,11,0.1)]',
       accentText: 'text-amber-400',
     };
@@ -814,9 +817,7 @@ function PodiumCard({ rank, data, animDelay = 0 }) {
         {data.total} <span className="text-[10px] font-sans font-normal opacity-50">pts</span>
       </div>
 
-      <div className="absolute top-1.5 right-3 text-[8px] font-semibold opacity-20 uppercase tracking-widest">
-        Time {data.originalId}
-      </div>
+
     </div>
   );
 }
