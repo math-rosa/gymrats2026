@@ -626,13 +626,13 @@ function RankingView({ data, fields }) {
   if (data.length === 0) return <div className="text-center p-10 text-gray-500">Sem dados.</div>;
 
   const maxTotal = data.reduce((max, item) => Math.max(max, item.total), 0);
-  const podiumData = data.filter(item => item.total === maxTotal);
-  const rest = data.filter(item => item.total < maxTotal);
+  const podiumData = data.filter(item => item.rank <= 3);
+  const rest = data.filter(item => item.rank > 3);
 
   return (
     <div className="h-full flex gap-8">
       {/* PODIO */}
-      <div className="w-1/2 flex flex-col gap-4 min-h-0">
+      <div className="w-[60%] flex flex-col gap-4 min-h-0">
         <div className="flex items-center justify-between">
           <h2 className="text-xs uppercase tracking-[0.3em] text-gray-400 font-bold flex items-center gap-2.5">
             <div className="w-1.5 h-5 bg-gradient-to-b from-[#742CFF] to-[#00FFB6] rounded-full" />
@@ -652,7 +652,7 @@ function RankingView({ data, fields }) {
       <div className="w-px animate-divider" />
 
       {/* TABELA */}
-      <div className="w-1/2 flex flex-col gap-4 min-h-0">
+      <div className="w-[40%] flex flex-col gap-4 min-h-0">
         {rest.length > 0 && (
           <div className="flex-1 bg-white/[0.02] rounded-2xl border border-white/[0.06] overflow-hidden backdrop-blur-sm flex flex-col min-h-0">
             <div className="px-6 py-3 border-b border-white/[0.06] flex justify-between items-center bg-white/[0.03] shrink-0">
@@ -739,7 +739,7 @@ function PodiumCard({ rank, data, animDelay = 0 }) {
       card: 'bg-gradient-to-r from-brand/10 via-brand/5 to-transparent border-brand/30 text-white ring-1 ring-brand/10',
       iconColor: 'text-accent',
       badge: 'bg-brand/10 text-brand-300 border-brand/20 backdrop-blur-md shadow-[0_0_15px_-3px_rgba(116,44,255,0.3)]',
-      glow: 'shadow-[0_0_40px_-10px_rgba(116,44,255,0.25)]',
+      glow: 'shadow-[0_0_50px_-10px_rgba(116,44,255,0.3)] scale-[1.02] border-brand/40',
       accentText: 'text-accent',
     };
   } else if (isSecond) {
@@ -773,18 +773,18 @@ function PodiumCard({ rank, data, animDelay = 0 }) {
       </div>
 
       {/* Avatares */}
-      <div className="flex -space-x-2 shrink-0">
+      <div className="flex -space-x-3 shrink-0 pl-2">
         {data.members?.length > 0 ? (
           data.members.map((member, idx) => (
             <Avatar
               key={idx}
               src={member.image}
-              className={`rounded-full border-2 border-[#0a0a0f] ${isFirst ? 'w-12 h-12' : 'w-10 h-10'}`}
+              className={`rounded-full border-2 border-[#0a0a0f] object-cover ring-1 ring-black/50 ${isFirst ? 'w-14 h-14' : 'w-10 h-10'}`}
               fallbackText="?"
             />
           ))
         ) : (
-          <div className={`rounded-full border-2 border-[#0a0a0f] bg-[#12121a] flex items-center justify-center text-gray-600 font-bold ${isFirst ? 'w-12 h-12' : 'w-10 h-10'} text-sm`}>?</div>
+          <div className={`rounded-full border-2 border-[#0a0a0f] bg-[#12121a] flex items-center justify-center text-gray-600 font-bold ring-1 ring-black/50 ${isFirst ? 'w-14 h-14' : 'w-10 h-10'} text-sm`}>?</div>
         )}
       </div>
 
