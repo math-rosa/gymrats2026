@@ -463,9 +463,7 @@ export default function App() {
 
               {/* Title */}
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-br from-brand to-brand-700 rounded-xl shadow-lg shadow-brand/20">
-                  <Trophy className="w-5 h-5 text-white" />
-                </div>
+
                 <div>
                   <h1 className="text-xl font-black text-white tracking-tighter italic uppercase">
                     GYM RATS <span className="text-accent">2026</span>
