@@ -29,7 +29,7 @@ const ACTIVITY_MAP = {
 };
 
 // Cores alternadas para o grafico
-const ACTIVITY_COLORS = ['#742CFF', '#00FFB6', '#742CFF'];
+const ACTIVITY_COLORS = ['#A855F7', '#00FFB6', '#A855F7'];
 
 // Configuracoes do Desafio
 const CHALLENGE_START = new Date('2026-02-01T00:00:00');
@@ -250,7 +250,7 @@ export default function App() {
             };
           })
           .sort((a, b) => b.count - a.count)
-          .slice(0, 3); // Top 3
+          .slice(0, 6); // Top 6
 
         setActivityStats(statsArray);
 
@@ -490,7 +490,7 @@ export default function App() {
               <div className="relative bg-white/[0.03] px-5 py-2.5 rounded-xl border border-white/[0.06] text-center overflow-hidden flex flex-col justify-center w-[140px]">
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#00FFB6] to-[#00FFB6]/40" />
                 <div className="flex items-center gap-2 justify-center">
-                  <Footprints className="w-4 h-4 text-[#00FFB6]" />
+                  <Footprints className="w-5 h-5 text-[#00FFB6]" />
                   <span className="text-xl font-black text-white"><AnimatedNumber value={bigNumbers.totalDistanceKm} /></span>
                   <span className="text-xs text-gray-500 font-semibold">km</span>
                 </div>
@@ -506,7 +506,7 @@ export default function App() {
                 <div className="relative bg-white/[0.03] px-4 py-2 rounded-xl border border-white/[0.06] overflow-hidden min-w-[200px]">
                   <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#742CFF] to-[#00FFB6]" />
                   <span className="text-[8px] uppercase tracking-widest text-gray-500 font-semibold block mb-1.5">Atividades Mais Praticadas</span>
-                  <div className="flex flex-col gap-1.5">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
                     {activityStats.map((stat, idx) => {
                       const IconComp = stat.icon;
                       const color = ACTIVITY_COLORS[idx % ACTIVITY_COLORS.length];
@@ -517,7 +517,7 @@ export default function App() {
                           <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
                             <div className="h-full rounded-full" style={{ width: `${stat.pct}%`, backgroundColor: color }} />
                           </div>
-                          <span className="text-[10px] font-bold w-10 text-right" style={{ color }}>{stat.pct.toFixed(1).replace('.', ',')}%</span>
+                          <span className="text-[10px] font-bold w-10 text-right" style={{ color: '#00FFB6' }}>{stat.pct.toFixed(1).replace('.', ',')}%</span>
                         </div>
                       );
                     })}
