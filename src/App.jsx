@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Loader2, AlertCircle, Trophy, Medal, Crown, Users, Calendar, Timer, Instagram, Dumbbell, Footprints, Zap, Bike, Flame, Swords, Mountain, RotateCw, Waves, Activity, Route } from 'lucide-react';
+import { Loader2, AlertCircle, Trophy, Medal, Crown, Users, Calendar, Timer, Instagram, Dumbbell, Footprints, Zap, Bike, Flame, Swords, Mountain, RotateCw, Waves, Activity, Route, Clock } from 'lucide-react';
 
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRAQdbRC3Pj39q2uwzwzcIMXHjnebOgEiWCEClH6RTEt_7bG3arvWLjng8MIqz-KrbpM8T_r8PHyYgh/pub?gid=761223336&single=true&output=csv";
 const FEED_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7yHWFR9qtahU0vlYZ_QKi24OUChWc5kW93NvTHIZMG4rdp5ED5iOkHTwFAxVc8TxPUlxGudvdDduE/pub?gid=53383827&single=true&output=csv";
@@ -193,7 +193,7 @@ export default function App() {
   const [progress, setProgress] = useState({ pct: 0, daysLeft: 0, currentDay: 0 });
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [activityStats, setActivityStats] = useState([]);
-  const [bigNumbers, setBigNumbers] = useState({ totalCalories: 0, totalDistanceKm: 0, totalWorkouts: 0 });
+  const [bigNumbers, setBigNumbers] = useState({ totalCalories: 0, totalDistanceKm: 0, totalWorkouts: 0, totalDurationMs: 0 });
 
   useEffect(() => {
     const fetchRanking = fetch(CSV_URL)
@@ -257,12 +257,14 @@ export default function App() {
 
         setActivityStats(statsArray);
 
-        // Calcular big numbers: soma de calorias e distancia
+        // Calcular big numbers: soma de calorias, distancia e duracao
         const caloriesKey = headers.find(h => /^calories$/i.test(h.trim())) || 'calories';
         const distanceKey = headers.find(h => /distance_miles/i.test(h)) || 'distance_miles';
+        const durationKey = headers.find(h => /duration_millis/i.test(h)) || 'duration_millis';
 
         let totalCal = 0;
         let totalMiles = 0;
+        let totalDurationMs = 0;
         jsonData.forEach(item => {
           // Tratar calorias: pode ter virgula como decimal
           const calStr = (item[caloriesKey] || '').trim().replace(',', '.');
@@ -273,10 +275,15 @@ export default function App() {
           const distStr = (item[distanceKey] || '').trim().replace(/"/g, '').replace(',', '.');
           const dist = parseFloat(distStr);
           if (!isNaN(dist) && dist > 0) totalMiles += dist;
+
+          // Tratar duracao em milissegundos
+          const durStr = (item[durationKey] || '').trim().replace(',', '.');
+          const dur = parseFloat(durStr);
+          if (!isNaN(dur) && dur > 0) totalDurationMs += dur;
         });
 
         const totalKm = totalMiles * 1.60934;
-        setBigNumbers({ totalCalories: Math.round(totalCal), totalDistanceKm: Math.round(totalKm), totalWorkouts: total });
+        setBigNumbers({ totalCalories: Math.round(totalCal), totalDistanceKm: Math.round(totalKm), totalWorkouts: total, totalDurationMs });
       })
       .catch(err => console.warn("Erro ao carregar atividades:", err));
 
@@ -497,6 +504,33 @@ export default function App() {
                 </div>
                 <span className="text-[9px] uppercase tracking-widest text-gray-500 font-semibold mt-0.5">percorridos</span>
               </div>
+              <div className="relative bg-white/[0.03] px-5 py-2.5 rounded-xl border border-white/[0.06] text-center overflow-hidden flex flex-col justify-center w-[140px]">
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#9B4DFF] to-[#9B4DFF]/40" />
+                <div className="flex items-center gap-2 justify-center">
+                  <Trophy className="w-4 h-4 text-[#9B4DFF]" />
+                  <span className="text-xl font-black text-white"><AnimatedNumber value={rankingData.reduce((sum, t) => sum + t.total, 0)} /></span>
+                </div>
+                <span className="text-[9px] uppercase tracking-widest text-gray-500 font-semibold">treinos totais</span>
+              </div>
+              {(() => {
+                const totalMs = bigNumbers.totalDurationMs;
+                const totalMinutes = Math.floor(totalMs / 60000);
+                const days = Math.floor(totalMinutes / 1440);
+                const hours = Math.floor((totalMinutes % 1440) / 60);
+                const mins = totalMinutes % 60;
+                return (
+                  <div className="relative bg-white/[0.03] px-5 py-2.5 rounded-xl border border-white/[0.06] text-center overflow-hidden flex flex-col justify-center w-[160px]">
+                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#FF6B6B] to-[#FF6B6B]/40" />
+                    <div className="flex items-center gap-1.5 justify-center">
+                      <Clock className="w-4 h-4 text-[#FF6B6B] shrink-0" />
+                      <span className="text-lg font-black text-white leading-none">{days}<span className="text-[10px] text-gray-500 font-semibold">d</span></span>
+                      <span className="text-lg font-black text-white leading-none">{hours}<span className="text-[10px] text-gray-500 font-semibold">h</span></span>
+                      <span className="text-lg font-black text-white leading-none">{mins}<span className="text-[10px] text-gray-500 font-semibold">m</span></span>
+                    </div>
+                    <span className="text-[9px] uppercase tracking-widest text-gray-500 font-semibold mt-0.5">horas treinadas</span>
+                  </div>
+                );
+              })()}
 
 
               {/* Separator */}
@@ -597,14 +631,7 @@ export default function App() {
           <RankingView data={rankingData} fields={fields} />
         </main>
 
-        {/* ═══ FOOTER ═══ */}
-        <footer className="relative z-10 border-t border-white/[0.06] py-2.5 overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#742CFF]/30 to-transparent" />
-          <div className="flex items-center justify-center gap-4">
-            <p className="text-gray-600 text-[10px] uppercase tracking-widest">Painel de Competição <span className="text-[#742CFF]">•</span> Temporada 2026 <span className="text-[#00FFB6]">•</span> Desenvolvido por Math Rosa</p>
 
-          </div>
-        </footer>
       </div>
     </div>
   );
