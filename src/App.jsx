@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Loader2, AlertCircle, Trophy, Medal, Crown, Users, Calendar, Timer, Instagram, Dumbbell, Footprints, Zap, Bike, Flame, Swords, Mountain, RotateCw, Waves, Activity, Route, Clock } from 'lucide-react';
+import TD_LOGO_URL from './tdbusiness_logo.jpg';
 
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRAQdbRC3Pj39q2uwzwzcIMXHjnebOgEiWCEClH6RTEt_7bG3arvWLjng8MIqz-KrbpM8T_r8PHyYgh/pub?gid=761223336&single=true&output=csv";
 const FEED_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7yHWFR9qtahU0vlYZ_QKi24OUChWc5kW93NvTHIZMG4rdp5ED5iOkHTwFAxVc8TxPUlxGudvdDduE/pub?gid=53383827&single=true&output=csv";
 const ACTIVITIES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRayA8iY_qiK4bRnABlZfFwo2-LyKDoLqiCohKznzi2MH5KG893pinjKnU9NNw-8XxAgn3FCgcTw9De/pub?gid=1519533572&single=true&output=csv";
-const TD_LOGO_URL = "https://media.licdn.com/dms/image/v2/D4D0BAQFOeA8IeerkJw/company-logo_200_200/B4DZjN0W.LGkAY-/0/1755799712104/tdbusiness_logo?e=1772064000&v=beta&t=mZSjFsHz9QBV0SfMrZwyA6SAfslEO6lt4HZ2tzmSH1M";
+
 
 // Mapeamento de atividades: nome em ingles -> nome PT-BR + icone
 const ACTIVITY_MAP = {
