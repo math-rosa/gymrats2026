@@ -196,7 +196,11 @@ export default function App() {
   const [bigNumbers, setBigNumbers] = useState({ totalCalories: 0, totalDistanceKm: 0, totalWorkouts: 0, totalDurationMs: 0 });
 
   useEffect(() => {
-    const fetchRanking = fetch(CSV_URL)
+    // Adiciona timestamp para evitar cache do navegador
+    const noCacheParams = { cache: 'no-store' };
+    const ts = Date.now();
+
+    const fetchRanking = fetch(`${CSV_URL}&_t=${ts}`, noCacheParams)
       .then(r => { if (!r.ok) throw new Error("Erro Ranking"); return r.text(); })
       .then(text => {
         const rawData = parseCSV(text);
@@ -206,7 +210,7 @@ export default function App() {
         setFields(guessFieldRoles(headers));
       });
 
-    const fetchFeed = fetch(FEED_CSV_URL)
+    const fetchFeed = fetch(`${FEED_CSV_URL}&_t=${ts}`, noCacheParams)
       .then(r => { if (!r.ok) throw new Error("Erro Feed"); return r.text(); })
       .then(text => {
         const rawData = parseCSV(text);
@@ -219,7 +223,7 @@ export default function App() {
       .catch(err => console.warn("Erro ao carregar feed:", err));
 
     // 3. Carregar CSV de Atividades
-    const fetchActivities = fetch(ACTIVITIES_CSV_URL)
+    const fetchActivities = fetch(`${ACTIVITIES_CSV_URL}&_t=${ts}`, noCacheParams)
       .then(r => { if (!r.ok) throw new Error("Erro Atividades"); return r.text(); })
       .then(text => {
         const rawData = parseCSV(text);
