@@ -2,9 +2,9 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Loader2, AlertCircle, Trophy, Medal, Crown, Users, Calendar, Timer, Instagram, Dumbbell, Footprints, Zap, Bike, Flame, Swords, Mountain, RotateCw, Waves, Activity, Route, Clock } from 'lucide-react';
 import TD_LOGO_URL from './tdbusiness_logo.jpg';
 
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRAQdbRC3Pj39q2uwzwzcIMXHjnebOgEiWCEClH6RTEt_7bG3arvWLjng8MIqz-KrbpM8T_r8PHyYgh/pub?gid=761223336&single=true&output=csv";
-const FEED_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7yHWFR9qtahU0vlYZ_QKi24OUChWc5kW93NvTHIZMG4rdp5ED5iOkHTwFAxVc8TxPUlxGudvdDduE/pub?gid=53383827&single=true&output=csv";
-const ACTIVITIES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRayA8iY_qiK4bRnABlZfFwo2-LyKDoLqiCohKznzi2MH5KG893pinjKnU9NNw-8XxAgn3FCgcTw9De/pub?gid=1519533572&single=true&output=csv";
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRAQdbRC3Pj39q2uwzwzcIMXHjnebOgEiWCEClH6RTEt_7bG3arvWLjng8MIqz-KrbpM8T_r8PHyYgh/pub?output=csv&gid=761223336";
+const FEED_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7yHWFR9qtahU0vlYZ_QKi24OUChWc5kW93NvTHIZMG4rdp5ED5iOkHTwFAxVc8TxPUlxGudvdDduE/pub?output=csv&gid=53383827";
+const ACTIVITIES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRayA8iY_qiK4bRnABlZfFwo2-LyKDoLqiCohKznzi2MH5KG893pinjKnU9NNw-8XxAgn3FCgcTw9De/pub?output=csv&gid=1519533572";
 
 
 // Mapeamento de atividades: nome em ingles -> nome PT-BR + icone
@@ -73,14 +73,12 @@ const csvToJson = (csvData) => {
 
   for (let i = 1; i < csvData.length; i++) {
     const row = csvData[i];
-    if (row.length === headers.length || (row.length === 1 && row[0] === '')) {
-      if (row.length === 1 && row[0] === '') continue;
-      const obj = {};
-      headers.forEach((header, index) => {
-        obj[header] = row[index] ? row[index].trim() : '';
-      });
-      result.push(obj);
-    }
+    if (row.length === 1 && row[0] === '') continue;
+    const obj = {};
+    headers.forEach((header, index) => {
+      obj[header] = row[index] ? row[index].trim() : '';
+    });
+    result.push(obj);
   }
   return { data: result, headers };
 };
