@@ -437,7 +437,7 @@ export default function App() {
           100% { transform: translateX(-50%); }
         }
         .animate-scroll {
-          animation: scroll 700s linear infinite;
+          animation: scroll 2500s linear infinite;
         }
         .animate-scroll:hover {
           animation-play-state: paused;
