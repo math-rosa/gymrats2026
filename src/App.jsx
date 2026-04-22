@@ -54,29 +54,7 @@ const csvToJson = (csvData) => {
   return { data: result, headers };
 };
 
-// Componente AnimatedNumber
-function AnimatedNumber({ value, duration = 1200, locale = 'pt-BR' }) {
-  const [display, setDisplay] = useState(0);
-  const ref = useRef(null);
-  const hasAnimated = useRef(false);
 
-  useEffect(() => {
-    if (hasAnimated.current || value === 0) { setDisplay(value); return; }
-    hasAnimated.current = true;
-    let start = null;
-    const step = (ts) => {
-      if (!start) start = ts;
-      const p = Math.min((ts - start) / duration, 1);
-      const ease = 1 - Math.pow(1 - p, 3);
-      setDisplay(Math.round(ease * value));
-      if (p < 1) ref.current = requestAnimationFrame(step);
-    };
-    ref.current = requestAnimationFrame(step);
-    return () => ref.current && cancelAnimationFrame(ref.current);
-  }, [value, duration]);
-
-  return <span className="animate-count">{display.toLocaleString(locale)}</span>;
-}
 
 function MediaItem({ url }) {
   const [loaded, setLoaded] = useState(false);
@@ -133,6 +111,39 @@ function MediaItem({ url }) {
       )}
     </div>
   );
+}
+// ═══ COMPONENTE DE NÚMERO ANIMADO ═══
+function AnimatedNumber({ value, isFloat = false }) {
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    let startTimestamp = null;
+    const duration = 2000; // 2 segundos
+    const endValue = parseFloat(value);
+    
+    if (isNaN(endValue)) {
+      setCurrent(value);
+      return;
+    }
+
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      // Easing function: easeOutQuart
+      const ease = 1 - Math.pow(1 - progress, 4);
+      const nextVal = ease * endValue;
+      setCurrent(isFloat ? nextVal.toFixed(1) : Math.floor(nextVal));
+      
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      } else {
+        setCurrent(isFloat ? endValue.toFixed(1) : endValue);
+      }
+    };
+    window.requestAnimationFrame(step);
+  }, [value, isFloat]);
+
+  return <>{current}</>;
 }
 
 // ═══ COMPONENTE DE COUNTDOWN ═══
@@ -457,22 +468,47 @@ function StatCard({ icon: Icon, color, value, label }) {
 // ═══ COMPONENTE DE PÓDIO ═══
 function Podium({ rankingData }) {
   const positions = [
-    { rank: 4, height: '400px', accentColor: '#F97316', glowColor: 'rgba(249,115,22,0.25)', place: '4º' },
-    { rank: 2, height: '450px', accentColor: '#8B5CF6', glowColor: 'rgba(139,92,246,0.25)', place: '2º' },
-    { rank: 1, height: '500px', accentColor: '#3B82F6', glowColor: 'rgba(59,130,246,0.30)', place: '1º', isWinner: true },
-    { rank: 3, height: '450px', accentColor: '#EC4899', glowColor: 'rgba(236,72,153,0.25)', place: '3º' },
-    { rank: 5, height: '400px', accentColor: '#10B981', glowColor: 'rgba(16,185,129,0.25)', place: '5º' },
+    { rank: 4, height: '400px', place: '4º' },
+    { rank: 2, height: '450px', place: '2º' },
+    { rank: 1, height: '500px', place: '1º', isWinner: true },
+    { rank: 3, height: '450px', place: '3º' },
+    { rank: 5, height: '400px', place: '5º' },
   ];
 
   // Garante que existam 5 posições, preenchendo com nulos se houver menos
   const paddedData = [...rankingData];
   while (paddedData.length < 5) paddedData.push(null);
 
+  const teamColors = {
+    'AZUL': { accentColor: '#3B82F6', glowColor: 'rgba(59,130,246,0.30)' },
+    'ROXO': { accentColor: '#8B5CF6', glowColor: 'rgba(139,92,246,0.25)' },
+    'ROSA': { accentColor: '#EC4899', glowColor: 'rgba(236,72,153,0.25)' },
+    'VERDE': { accentColor: '#10B981', glowColor: 'rgba(16,185,129,0.25)' },
+    'LARANJA': { accentColor: '#F97316', glowColor: 'rgba(249,115,22,0.25)' }
+  };
+
+  const defaultColors = [
+    { accentColor: '#3B82F6', glowColor: 'rgba(59,130,246,0.30)' },
+    { accentColor: '#8B5CF6', glowColor: 'rgba(139,92,246,0.25)' },
+    { accentColor: '#EC4899', glowColor: 'rgba(236,72,153,0.25)' },
+    { accentColor: '#F97316', glowColor: 'rgba(249,115,22,0.25)' },
+    { accentColor: '#10B981', glowColor: 'rgba(16,185,129,0.25)' },
+  ];
+
   const podiumRender = positions.map((pos) => {
     // Usa o índice do array (rank - 1) para garantir que as 5 posições sejam preenchidas na ordem correta,
     // independente de haver pontuações empatadas pulando números de rank.
     const team = paddedData[pos.rank - 1];
-    return { ...pos, team };
+    let colors = defaultColors[pos.rank - 1];
+    
+    if (team && team.name) {
+      const teamName = team.name.toUpperCase();
+      if (teamColors[teamName]) {
+        colors = teamColors[teamName];
+      }
+    }
+
+    return { ...pos, accentColor: colors.accentColor, glowColor: colors.glowColor, team };
   });
 
   return (
@@ -509,12 +545,16 @@ function Podium({ rankingData }) {
 }
 
 function PodiumTeamCard({ config, team, animDelay }) {
+  // Calcula um delay de levitação único por posição
+  const levitateDelay = `${(config.rank - 1) * 1.3}s`;
+
   return (
     <div
-      className={`flex-1 max-w-[320px] flex flex-col relative z-10 transition-all duration-300 ${config.isWinner ? 'animate-float' : 'hover:-translate-y-2 animate-fade-in'}`}
+      className="flex-1 max-w-[320px] flex flex-col relative z-10 animate-levitate"
       style={{
         height: config.height,
-        animationDelay: config.isWinner ? '0s' : `${animDelay}ms`,
+        animationDelay: levitateDelay,
+        animationDuration: `${5 + config.rank * 0.7}s`,
       }}
     >
       {/* BACKGROUND COM EFEITO DE VIDRO (Isolado para não cortar elementos absolutos) */}
@@ -584,7 +624,7 @@ function PodiumTeamCard({ config, team, animDelay }) {
         </div>
 
         <div className="flex items-center justify-center gap-2 w-full">
-          {/* Badge Pontos */}
+          {/* Badge Pontos e Destaque */}
           <div
             className="px-2 py-0.5 rounded-md text-xs font-bold flex items-baseline gap-1"
             style={{
@@ -593,14 +633,19 @@ function PodiumTeamCard({ config, team, animDelay }) {
               color: config.accentColor,
             }}
           >
-            <span className="text-[13px] leading-none font-black">{team.total}</span>
-            <span className="text-[9px] uppercase tracking-widest opacity-70">pts</span>
+            <span className="text-[13px] leading-none font-black"><AnimatedNumber value={team.total} /></span>
+            <span className="text-[9px] uppercase tracking-widest opacity-80">pts</span>
+            <div className="flex items-center ml-1 pl-1.5 border-l border-white/[0.15]">
+              <span className="text-[11px] font-black text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse">
+                +15
+              </span>
+            </div>
           </div>
 
           {/* Badge KM */}
           <div className="px-2 py-0.5 rounded-md text-xs font-bold flex items-baseline gap-1 bg-white/[0.03] border border-white/[0.05] text-gray-300">
             <Route className="w-2.5 h-2.5 opacity-50 mr-0.5 self-center" />
-            <span className="text-[13px] leading-none font-black">{team.totalKm.toFixed(1)}</span>
+            <span className="text-[13px] leading-none font-black"><AnimatedNumber value={parseFloat(team.totalKm.toFixed(1))} isFloat /></span>
             <span className="text-[9px] uppercase tracking-widest opacity-50">km</span>
           </div>
         </div>
