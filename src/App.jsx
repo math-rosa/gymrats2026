@@ -1,43 +1,14 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Loader2, AlertCircle, Trophy, Medal, Crown, Users, Calendar, Timer, Instagram, Dumbbell, Footprints, Zap, Bike, Flame, Swords, Mountain, RotateCw, Waves, Activity, Route, Clock } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Loader2, AlertCircle, Trophy, Users, Route, Instagram, Timer, Crown } from 'lucide-react';
 import TD_LOGO_URL from './tdbusiness_logo.jpg';
 
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRAQdbRC3Pj39q2uwzwzcIMXHjnebOgEiWCEClH6RTEt_7bG3arvWLjng8MIqz-KrbpM8T_r8PHyYgh/pub?output=csv&gid=761223336";
-const FEED_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7yHWFR9qtahU0vlYZ_QKi24OUChWc5kW93NvTHIZMG4rdp5ED5iOkHTwFAxVc8TxPUlxGudvdDduE/pub?output=csv&gid=53383827";
-const ACTIVITIES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRayA8iY_qiK4bRnABlZfFwo2-LyKDoLqiCohKznzi2MH5KG893pinjKnU9NNw-8XxAgn3FCgcTw9De/pub?output=csv&gid=1519533572";
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3nqk-0k8VUtIgaR77357dukIvWCBwRs8wY4wIju32ricmg3LIEGyGMlhruMtGBJEE3CeEm8nr6PJO/pub?gid=196084497&single=true&output=csv";
+const FEED_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3nqk-0k8VUtIgaR77357dukIvWCBwRs8wY4wIju32ricmg3LIEGyGMlhruMtGBJEE3CeEm8nr6PJO/pub?gid=1279537034&single=true&output=csv";
 
+const CHALLENGE_START = new Date('2026-04-15T00:00:00');
+const CHALLENGE_END = new Date('2026-05-29T23:59:59');
 
-// Mapeamento de atividades: nome em ingles -> nome PT-BR + icone
-const ACTIVITY_MAP = {
-  strength_training: { label: 'Treino de Força', icon: Dumbbell },
-  running: { label: 'Corrida', icon: Zap },
-  walking: { label: 'Caminhada', icon: Footprints },
-  cycling: { label: 'Ciclismo', icon: Bike },
-  hiit: { label: 'HIIT', icon: Flame },
-  calisthenics: { label: 'Calistenia', icon: Swords },
-  functional_training: { label: 'Funcional', icon: Activity },
-  circuit_training: { label: 'Circuito', icon: RotateCw },
-  hiking: { label: 'Trilha', icon: Mountain },
-  swimming: { label: 'Natação', icon: Waves },
-  core_training: { label: 'Core', icon: Activity },
-  cross_training: { label: 'Cross Training', icon: Activity },
-  soccer: { label: 'Futebol', icon: Activity },
-  spinning: { label: 'Spinning', icon: Bike },
-  rowing: { label: 'Remo', icon: Waves },
-  stairs: { label: 'Escada', icon: Activity },
-  stationary_bike: { label: 'Bike Ergométrica', icon: Bike },
-  other: { label: 'Outros', icon: Activity },
-};
-
-// Cores alternadas para o grafico
-const ACTIVITY_COLORS = ['#00FFB6'];
-
-// Configuracoes do Desafio
-const CHALLENGE_START = new Date('2026-02-01T00:00:00');
-const CHALLENGE_END = new Date('2026-03-17T23:59:59');
-
-// --- Utilitarios ---
-
+// --- Utilitários ---
 const toTitleCase = (str) => {
   if (!str) return "";
   return str.toLowerCase().split(' ').map(word => {
@@ -67,7 +38,7 @@ const parseCSV = (str) => {
 };
 
 const csvToJson = (csvData) => {
-  if (csvData.length < 2) return [];
+  if (csvData.length < 2) return { data: [], headers: [] };
   const headers = csvData[0].map(h => h.trim());
   const result = [];
 
@@ -83,48 +54,7 @@ const csvToJson = (csvData) => {
   return { data: result, headers };
 };
 
-const guessFieldRoles = (headers) => {
-  const roles = {
-    title: headers.find(h => /participante|atleta|membro|jogador/i.test(h)) ||
-      headers.find(h => /(?<!time\s)(?<!team\s)(nome|name)(?!.*(time|team|equipe|dupla|pair))/i.test(h)) ||
-      headers.find(h => /nome|name|title|titulo|modelo|produto/i.test(h)) ||
-      headers[0],
-    image: headers.find(h => /img|image|foto|pic|url|src|thumbnail/i.test(h)),
-    points: headers.find(h => /ponto|point|score|nota|pts|total|dias/i.test(h)),
-    pair: headers.find(h => /dupla|pair|equipe|team|time|participante/i.test(h))
-  };
-  return roles;
-};
-
-// Componente de Avatar
-const Avatar = ({ src, className, fallbackText = "?" }) => {
-  const [loaded, setLoaded] = useState(false);
-  const [error, setError] = useState(false);
-
-  if (error || !src) {
-    return (
-      <div className={`${className} flex items-center justify-center bg-[#12121a] text-gray-600 font-bold`}>
-        {fallbackText}
-      </div>
-    );
-  }
-
-  return (
-    <div className={`${className} relative bg-[#12121a] overflow-hidden`}>
-      {!loaded && <div className="absolute inset-0 bg-gray-800 animate-pulse" />}
-      <img
-        src={src}
-        className={`w-full h-full object-cover transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
-        onLoad={() => setLoaded(true)}
-        onError={() => setError(true)}
-        loading="lazy"
-        alt="Avatar"
-      />
-    </div>
-  );
-};
-
-// Componente de Midia do Feed
+// Componente AnimatedNumber
 function AnimatedNumber({ value, duration = 1200, locale = 'pt-BR' }) {
   const [display, setDisplay] = useState(0);
   const ref = useRef(null);
@@ -137,7 +67,7 @@ function AnimatedNumber({ value, duration = 1200, locale = 'pt-BR' }) {
     const step = (ts) => {
       if (!start) start = ts;
       const p = Math.min((ts - start) / duration, 1);
-      const ease = 1 - Math.pow(1 - p, 3); // easeOutCubic
+      const ease = 1 - Math.pow(1 - p, 3);
       setDisplay(Math.round(ease * value));
       if (p < 1) ref.current = requestAnimationFrame(step);
     };
@@ -150,35 +80,116 @@ function AnimatedNumber({ value, duration = 1200, locale = 'pt-BR' }) {
 
 function MediaItem({ url }) {
   const [loaded, setLoaded] = useState(false);
+  const [shouldLoad, setShouldLoad] = useState(false);
+  const containerRef = useRef(null);
   const isVideo = url.match(/\.(mp4|mov|webm)$/i);
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setShouldLoad(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '600px' } // Pré-carrega ~12 itens antes de entrarem na tela
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="relative mx-2 w-40 h-40 rounded-2xl overflow-hidden border border-white/[0.08] bg-[#0e0e16] shrink-0 group transition-all duration-300 hover:scale-105 hover:z-20 hover:border-brand/50 cursor-pointer shadow-lg hover:shadow-brand/20">
+    <div ref={containerRef} className="relative mx-2 w-40 h-40 rounded-2xl overflow-hidden border border-white/[0.08] bg-[#0e0e16] shrink-0 group transition-all duration-300 hover:scale-105 hover:z-20 hover:border-blue-500/50 cursor-pointer shadow-md hover:shadow-xl">
       {!loaded && (
         <div className="absolute inset-0 bg-[#12121a] animate-pulse flex items-center justify-center z-0">
-          <Loader2 className="w-5 h-5 text-gray-700 animate-spin" />
+          <Loader2 className="w-5 h-5 text-gray-600 animate-spin" />
         </div>
       )}
 
-      {isVideo ? (
-        <video
-          src={url}
-          className={`w-full h-full object-cover transition-opacity duration-700 ${loaded ? 'opacity-80 group-hover:opacity-100' : 'opacity-0'}`}
-          autoPlay
-          muted
-          loop
-          playsInline
-          onLoadedData={() => setLoaded(true)}
-        />
-      ) : (
-        <img
-          src={url}
-          alt="Feed item"
-          className={`w-full h-full object-cover transition-opacity duration-700 ${loaded ? 'opacity-80 group-hover:opacity-100' : 'opacity-0'}`}
-          onLoad={() => setLoaded(true)}
-          loading="lazy"
-        />
+      {shouldLoad && (
+        isVideo ? (
+          <video
+            src={url}
+            className={`w-full h-full object-cover transition-opacity duration-700 ${loaded ? 'opacity-90 group-hover:opacity-100' : 'opacity-0'}`}
+            autoPlay
+            muted
+            loop
+            playsInline
+            onLoadedData={() => setLoaded(true)}
+          />
+        ) : (
+          <img
+            src={url}
+            alt="Feed item"
+            className={`w-full h-full object-cover transition-opacity duration-700 ${loaded ? 'opacity-90 group-hover:opacity-100' : 'opacity-0'}`}
+            onLoad={() => setLoaded(true)}
+            loading="lazy"
+          />
+        )
       )}
+    </div>
+  );
+}
+
+// ═══ COMPONENTE DE COUNTDOWN ═══
+function ChallengeCountdown({ startDate, endDate }) {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [progress, setProgress] = useState({ pct: 0, currentDay: 0 });
+
+  useEffect(() => {
+    const calculateTime = () => {
+      const now = new Date();
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const totalDuration = end - start;
+      const elapsed = now - start;
+      
+      let pct = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+      const currentDay = Math.min(45, Math.max(0, Math.ceil(elapsed / (1000 * 60 * 60 * 24))));
+
+      const remaining = end - now;
+      if (remaining > 0) {
+        setTimeLeft({
+          days: Math.floor(remaining / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((remaining / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((remaining / 1000 / 60) % 60),
+          seconds: Math.floor((remaining / 1000) % 60)
+        });
+      } else {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      }
+      setProgress({ pct, currentDay });
+    };
+
+    calculateTime();
+    const timer = setInterval(calculateTime, 1000);
+    return () => clearInterval(timer);
+  }, [startDate, endDate]);
+
+  const format = (num) => num.toString().padStart(2, '0');
+
+  return (
+    <div className="bg-[#12121a] px-5 py-2.5 rounded-2xl border border-white/[0.06] flex flex-col justify-center min-w-[300px] shadow-lg">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-[9px] uppercase tracking-widest text-gray-500 font-bold">Desafio 45 Dias</span>
+        <span className="text-[10px] font-bold text-white bg-white/[0.04] px-2 py-0.5 rounded-lg border border-white/[0.03]">
+          Dia {progress.currentDay} <span className="text-gray-500 font-normal">/ 45</span>
+        </span>
+      </div>
+      
+      <div className="flex items-center gap-2.5">
+        <Timer className="w-4 h-4 text-green-400" />
+        <div className="flex items-baseline gap-1 text-white font-black text-xl tracking-tight">
+          {format(timeLeft.days)}<span className="text-[10px] text-gray-500 font-bold tracking-widest uppercase mr-1">d</span>:
+          <span className="ml-1">{format(timeLeft.hours)}</span><span className="text-[10px] text-gray-500 font-bold tracking-widest uppercase mr-1">h</span>:
+          <span className="ml-1">{format(timeLeft.minutes)}</span><span className="text-[10px] text-gray-500 font-bold tracking-widest uppercase mr-1">m</span>:
+          <span className="ml-1">{format(timeLeft.seconds)}</span><span className="text-[10px] text-gray-500 font-bold tracking-widest uppercase">s</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -188,14 +199,8 @@ export default function App() {
   const [feedData, setFeedData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [fields, setFields] = useState({});
-  const [progress, setProgress] = useState({ pct: 0, daysLeft: 0, currentDay: 0 });
-  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-  const [activityStats, setActivityStats] = useState([]);
-  const [bigNumbers, setBigNumbers] = useState({ totalCalories: 0, totalDistanceKm: 0, totalWorkouts: 0, totalDurationMs: 0 });
 
   useEffect(() => {
-    // Adiciona timestamp para evitar cache do navegador
     const noCacheParams = { cache: 'no-store' };
     const ts = Date.now();
 
@@ -203,10 +208,9 @@ export default function App() {
       .then(r => { if (!r.ok) throw new Error("Erro Ranking"); return r.text(); })
       .then(text => {
         const rawData = parseCSV(text);
-        const { data: jsonData, headers } = csvToJson(rawData);
+        const { data: jsonData } = csvToJson(rawData);
         if (jsonData.length === 0) throw new Error("CSV Ranking vazio.");
         setData(jsonData);
-        setFields(guessFieldRoles(headers));
       });
 
     const fetchFeed = fetch(`${FEED_CSV_URL}&_t=${ts}`, noCacheParams)
@@ -215,172 +219,74 @@ export default function App() {
         const rawData = parseCSV(text);
         const { data: jsonData } = csvToJson(rawData);
         const media = jsonData
-          .map(item => item.url)
-          .filter(url => url && url.length > 5);
+          .map(item => item.thumbnail_url || item.url)
+          .filter(url => url && url.length > 5)
+          .reverse() // Pegar os mais recentes (do fim da planilha)
+          .slice(0, 15); // Limitar a 15 itens no DOM
         setFeedData(media);
       })
       .catch(err => console.warn("Erro ao carregar feed:", err));
 
-    // 3. Carregar CSV de Atividades
-    const fetchActivities = fetch(`${ACTIVITIES_CSV_URL}&_t=${ts}`, noCacheParams)
-      .then(r => { if (!r.ok) throw new Error("Erro Atividades"); return r.text(); })
-      .then(text => {
-        const rawData = parseCSV(text);
-        const { data: jsonData, headers } = csvToJson(rawData);
-
-        // Encontrar a coluna platform_activity
-        const activityKey = headers.find(h => /platform_activity/i.test(h)) || 'platform_activity';
-
-        // Contar ocorrencias de cada atividade
-        const counts = {};
-        let total = 0;
-        jsonData.forEach(item => {
-          let activity = (item[activityKey] || '').trim().toLowerCase();
-          if (!activity) return;
-          // Normalizar: remover underscores duplicados, espaços extras
-          activity = activity.replace(/\s+/g, '_').replace(/_+/g, '_');
-          counts[activity] = (counts[activity] || 0) + 1;
-          total++;
-        });
-
-        // Converter para array com porcentagens e ordenar
-        const statsArray = Object.entries(counts)
-          .map(([key, count]) => {
-            const mapped = ACTIVITY_MAP[key] || { label: toTitleCase(key.replace(/_/g, ' ')), icon: Activity };
-            return {
-              key,
-              label: mapped.label,
-              icon: mapped.icon,
-              count,
-              pct: total > 0 ? ((count / total) * 100) : 0,
-            };
-          })
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 6); // Top 6
-
-        setActivityStats(statsArray);
-
-        // Calcular big numbers: soma de calorias, distancia e duracao
-        const caloriesKey = headers.find(h => /^calories$/i.test(h.trim())) || 'calories';
-        const distanceKey = headers.find(h => /distance_miles/i.test(h)) || 'distance_miles';
-        const durationKey = headers.find(h => /duration_millis/i.test(h)) || 'duration_millis';
-
-        let totalCal = 0;
-        let totalMiles = 0;
-        let totalDurationMs = 0;
-        jsonData.forEach(item => {
-          // Tratar calorias: pode ter virgula como decimal
-          const calStr = (item[caloriesKey] || '').trim().replace(',', '.');
-          const cal = parseFloat(calStr);
-          if (!isNaN(cal) && cal > 0) totalCal += cal;
-
-          // Tratar distancia: pode ter virgula como decimal e aspas
-          const distStr = (item[distanceKey] || '').trim().replace(/"/g, '').replace(',', '.');
-          const dist = parseFloat(distStr);
-          if (!isNaN(dist) && dist > 0) totalMiles += dist;
-
-          // Tratar duracao em milissegundos
-          const durStr = (item[durationKey] || '').trim().replace(',', '.');
-          const dur = parseFloat(durStr);
-          if (!isNaN(dur) && dur > 0) totalDurationMs += dur;
-        });
-
-        const totalKm = totalMiles * 1.60934;
-        setBigNumbers({ totalCalories: Math.round(totalCal), totalDistanceKm: Math.round(totalKm), totalWorkouts: total, totalDurationMs });
-      })
-      .catch(err => console.warn("Erro ao carregar atividades:", err));
-
-    Promise.all([fetchRanking, fetchFeed, fetchActivities])
+    Promise.all([fetchRanking, fetchFeed])
       .then(() => setLoading(false))
       .catch(err => {
         setError(err.message);
         setLoading(false);
       });
-
-    const now = new Date();
-    const totalDuration = CHALLENGE_END - CHALLENGE_START;
-    const elapsed = now - CHALLENGE_START;
-
-    let pct = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
-    const daysLeft = Math.ceil((CHALLENGE_END - now) / (1000 * 60 * 60 * 24));
-    const currentDay = Math.ceil(elapsed / (1000 * 60 * 60 * 24));
-
-    setProgress({
-      pct,
-      daysLeft: Math.max(0, daysLeft),
-      currentDay: Math.min(45, Math.max(0, currentDay))
-    });
-
   }, []);
 
-  // Live countdown timer
-  useEffect(() => {
-    const tick = () => {
-      const now = new Date();
-      const diff = Math.max(0, CHALLENGE_END - now);
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      setCountdown({ days, hours, minutes, seconds });
-    };
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, []);
 
-  // Calculo do Ranking
-  const rankingData = useMemo(() => {
-    if (!fields.pair || !fields.points) return [];
 
+  // Novo Cálculo do Ranking e Totais (Times)
+  const { rankingData, totalKm } = useMemo(() => {
+    if (!data || data.length === 0) return { rankingData: [], totalKm: 0 };
+    
     const scores = {};
-
+    let globalKm = 0;
+    
     data.forEach(item => {
-      const pairId = item[fields.pair];
-      const memberName = item[fields.title];
-      const memberImage = item[fields.image];
-      const rawPoints = item[fields.points] || "0";
+      const teamName = item['TIME']?.trim();
+      const memberName = item['NOME']?.trim();
+      // const avatar = item['AVATAR']?.trim();
+      const rawPoints = item['CHECK-IN'] || "0";
+      
+      // Ignorar linhas de totalização ou vazias
+      if (!teamName || teamName.toUpperCase() === 'TOTAL' || !memberName || memberName.toUpperCase() === 'TOTAL') {
+        return;
+      }
+
       const points = parseFloat(rawPoints.toString().replace(',', '.')) || 0;
+      const rawKm = item['KM'] || "0";
+      const km = parseFloat(rawKm.toString().replace(',', '.')) || 0;
 
-      if (pairId) {
-        if (!scores[pairId]) {
-          scores[pairId] = { id: pairId, members: [], total: 0 };
-        }
+      globalKm += km;
 
-        scores[pairId].total += points;
+      if (!scores[teamName]) {
+        scores[teamName] = { id: teamName, name: teamName, members: [], total: 0, totalKm: 0 };
+      }
 
-        if (memberName) {
-          let existingMember = scores[pairId].members.find(m => m.name === memberName);
-
-          if (existingMember) {
-            existingMember.points += points;
-            if (!existingMember.image && memberImage) existingMember.image = memberImage;
-          } else {
-            scores[pairId].members.push({
-              name: memberName,
-              image: memberImage,
-              points: points
-            });
-          }
-        }
+      scores[teamName].total += points;
+      scores[teamName].totalKm += km;
+      
+      let existingMember = scores[teamName].members.find(m => m.name === memberName);
+      if (existingMember) {
+        existingMember.points += points;
+        existingMember.km += km;
+      } else {
+        scores[teamName].members.push({
+          name: memberName,
+          formattedName: toTitleCase(memberName),
+          points: points,
+          km: km
+        });
       }
     });
 
     const sortedList = Object.values(scores)
-      .map(score => {
-        const formattedMembers = score.members.map(m => ({
-          ...m,
-          formattedName: toTitleCase(m.name)
-        }));
-
-        const names = formattedMembers.map(m => m.formattedName);
-
-        return {
-          name: names.length > 0 ? names.join(' & ') : `Dupla ${score.id}`,
-          total: score.total,
-          originalId: score.id,
-          members: formattedMembers
-        };
+      .map(team => {
+        // Ordenar os membros de cada time por pontos decrescente
+        team.members.sort((a, b) => b.points - a.points);
+        return team;
       })
       .sort((a, b) => b.total - a.total);
 
@@ -392,18 +298,15 @@ export default function App() {
       sortedList[i].rank = currentRank;
     }
 
-    return sortedList;
-  }, [data, fields]);
+    return { rankingData: sortedList, totalKm: Math.round(globalKm) };
+  }, [data]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="relative">
-            <div className="absolute inset-0 bg-brand/20 rounded-full blur-xl animate-pulse" />
-            <Loader2 className="relative w-10 h-10 animate-spin text-brand" />
-          </div>
-          <p className="text-gray-500 font-medium text-sm tracking-widest uppercase">Carregando Gym Rats...</p>
+          <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+          <p className="text-gray-500 font-medium tracking-widest uppercase">Carregando Gym Rats...</p>
         </div>
       </div>
     );
@@ -412,13 +315,13 @@ export default function App() {
   if (error) {
     return (
       <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center p-6">
-        <div className="bg-[#12121a] p-8 rounded-2xl shadow-2xl border border-red-900/30 max-w-md w-full text-center">
+        <div className="bg-[#12121a] p-8 rounded-2xl shadow-xl border border-red-900/30 max-w-md w-full text-center">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-white mb-2">Erro de Conexão</h2>
           <p className="text-gray-400 mb-6">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-2.5 bg-gradient-to-r from-brand to-brand-600 hover:from-brand-400 hover:to-brand text-white rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-brand/20 hover:shadow-brand/40"
+            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-colors shadow-md"
           >
             Tentar Novamente
           </button>
@@ -428,424 +331,322 @@ export default function App() {
   }
 
   return (
-    <div className="h-screen bg-[#06060a] text-gray-200 font-sans overflow-hidden flex items-center justify-center p-4">
-      <div className="w-full h-full bg-[#0a0a0f] rounded-2xl border border-white/5 overflow-hidden flex flex-col shadow-2xl">
-        {/* Marquee CSS */}
-        <style>{`
-        @keyframes scroll {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .animate-scroll {
-          animation: scroll 2500s linear infinite;
-        }
-        .animate-scroll:hover {
-          animation-play-state: paused;
-        }
-      `}</style>
-
-        {/* Background Effects */}
-        <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-          <div className="absolute top-[-15%] left-[15%] w-[600px] h-[600px] bg-brand/8 rounded-full blur-[120px]" />
-          <div className="absolute bottom-[-15%] right-[15%] w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px]" />
-        </div>
-        <div
-          className="fixed inset-0 pointer-events-none z-0 opacity-20"
-          style={{
-            backgroundImage:
-              'linear-gradient(rgba(116,44,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(116,44,255,0.03) 1px, transparent 1px)',
-            backgroundSize: '40px 40px'
-          }}
+    <div className="min-h-screen bg-[#030305] text-gray-200 font-sans flex flex-col relative overflow-hidden">
+      {/* ═══ PREMIUM BACKGROUND ═══ */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        {/* Animated Aurora Orbs */}
+        <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] rounded-full mix-blend-screen filter blur-[120px] opacity-50 animate-pulse" style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.3) 0%, rgba(0,0,0,0) 70%)', animationDuration: '10s' }} />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] rounded-full mix-blend-screen filter blur-[130px] opacity-40 animate-pulse" style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.2) 0%, rgba(0,0,0,0) 70%)', animationDuration: '14s' }} />
+        <div className="absolute top-[30%] left-[30%] w-[40vw] h-[40vw] rounded-full mix-blend-screen filter blur-[150px] opacity-30 animate-pulse" style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.15) 0%, rgba(0,0,0,0) 70%)', animationDuration: '18s' }} />
+        
+        {/* Premium Noise / Dot Overlay */}
+        <div 
+          className="absolute inset-0 opacity-[0.25]" 
+          style={{ 
+            backgroundImage: 'radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px)', 
+            backgroundSize: '24px 24px',
+            maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.2) 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.2) 100%)'
+          }} 
         />
+        
+        {/* Vignette Overlay for Depth */}
+        <div className="absolute inset-0 bg-black/40 pointer-events-none" style={{ background: 'radial-gradient(circle at 50% 50%, transparent 20%, rgba(3,3,5,0.8) 100%)' }} />
+      </div>
 
-        {/* ═══ HEADER ═══ */}
-        <header className="relative z-10 border-b border-white/[0.06] bg-[#0a0a0f]/90 backdrop-blur-xl">
-          {/* Top Row: Logo + Big Numbers + Progress */}
-          <div className="mx-auto px-8 py-4 flex items-stretch justify-between">
-            <div className="flex items-center gap-4">
-              {/* Logo */}
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-brand to-accent rounded-xl blur opacity-40 group-hover:opacity-70 transition duration-500" />
-                <img src={TD_LOGO_URL} alt="TD Business" className="relative w-10 h-10 rounded-xl object-cover border border-white/10 shadow-xl bg-[#12121a]" />
-              </div>
-
-              <div className="h-8 w-px bg-white/5" />
-
-              {/* Title */}
-              <div className="flex items-center gap-3">
-
-                <div>
-                  <h1 className="text-xl font-black text-white tracking-tighter italic uppercase">
-                    GYM RATS <span className="text-accent">2026</span>
-                  </h1>
-                  <p className="text-[10px] text-gray-500 font-semibold uppercase tracking-widest flex items-center gap-1.5">
-                    <Users className="w-3 h-3" /> {rankingData.length} Equipes <span className="text-gray-600">•</span> {rankingData.reduce((sum, t) => sum + (t.members?.length || 0), 0)} Participantes
-                  </p>
-                  <p className="text-[9px] text-gray-600 tracking-wider">
-                    Atualizado em {(() => { const y = new Date(); y.setDate(y.getDate() - 1); const d = String(y.getDate()).padStart(2, '0'); const m = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'][y.getMonth()]; return `${d}-${m} às 23h59`; })()}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Big Numbers + Activity Stats */}
-            <div className="flex items-stretch gap-3">
-              <div className="relative bg-white/[0.03] px-5 py-2.5 rounded-xl border border-white/[0.06] text-center overflow-hidden flex flex-col justify-center w-[140px]">
-                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#742CFF] to-[#742CFF]/40" />
-                <div className="flex items-center gap-2 justify-center">
-                  <Flame className="w-4 h-4 text-[#742CFF]" />
-                  <span className="text-xl font-black text-white"><AnimatedNumber value={bigNumbers.totalCalories} /></span>
-                </div>
-                <span className="text-[9px] uppercase tracking-widest text-gray-500 font-semibold">kcal queimadas</span>
-              </div>
-              <div className="relative bg-white/[0.03] px-2 py-2.5 rounded-xl border border-white/[0.06] text-center overflow-hidden flex flex-col justify-center w-[140px]">
-                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#00FFB6] to-[#00FFB6]/40" />
-                <div className="flex items-center justify-center gap-1.5">
-                  <Route className="w-6 h-6 text-[#00FFB6] shrink-0" />
-                  <span className="text-xl font-black text-white leading-none"><AnimatedNumber value={bigNumbers.totalDistanceKm} /></span>
-                  <span className="text-xs text-gray-500 font-semibold self-end mb-0.5">km</span>
-                </div>
-                <span className="text-[9px] uppercase tracking-widest text-gray-500 font-semibold mt-0.5">percorridos</span>
-              </div>
-              <div className="relative bg-white/[0.03] px-5 py-2.5 rounded-xl border border-white/[0.06] text-center overflow-hidden flex flex-col justify-center w-[140px]">
-                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#9B4DFF] to-[#9B4DFF]/40" />
-                <div className="flex items-center gap-2 justify-center">
-                  <Trophy className="w-4 h-4 text-[#9B4DFF]" />
-                  <span className="text-xl font-black text-white"><AnimatedNumber value={rankingData.reduce((sum, t) => sum + t.total, 0)} /></span>
-                </div>
-                <span className="text-[9px] uppercase tracking-widest text-gray-500 font-semibold">treinos totais</span>
-              </div>
-              {(() => {
-                const totalMs = bigNumbers.totalDurationMs;
-                const totalMinutes = Math.floor(totalMs / 60000);
-                const days = Math.floor(totalMinutes / 1440);
-                const hours = Math.floor((totalMinutes % 1440) / 60);
-                const mins = totalMinutes % 60;
-                return (
-                  <div className="relative bg-white/[0.03] px-5 py-2.5 rounded-xl border border-white/[0.06] text-center overflow-hidden flex flex-col justify-center w-[160px]">
-                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#FF6B6B] to-[#FF6B6B]/40" />
-                    <div className="flex items-center gap-1.5 justify-center">
-                      <Clock className="w-4 h-4 text-[#FF6B6B] shrink-0" />
-                      <span className="text-lg font-black text-white leading-none">{days}<span className="text-[10px] text-gray-500 font-semibold">d</span></span>
-                      <span className="text-lg font-black text-white leading-none">{hours}<span className="text-[10px] text-gray-500 font-semibold">h</span></span>
-                      <span className="text-lg font-black text-white leading-none">{mins}<span className="text-[10px] text-gray-500 font-semibold">m</span></span>
-                    </div>
-                    <span className="text-[9px] uppercase tracking-widest text-gray-500 font-semibold mt-0.5">horas treinadas</span>
-                  </div>
-                );
-              })()}
-
-
-              {/* Separator */}
-              {activityStats.length > 0 && <div className="w-px bg-white/[0.06] self-stretch" />}
-
-              {/* Activity Stats - Stacked Card */}
-              {activityStats.length > 0 && (
-                <div className="relative bg-white/[0.03] px-4 py-2 rounded-xl border border-white/[0.06] overflow-hidden min-w-[200px]">
-                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#742CFF] to-[#00FFB6]" />
-                  <span className="text-[8px] uppercase tracking-widest text-gray-500 font-semibold block mb-1.5">Atividades Mais Praticadas</span>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-                    {activityStats.map((stat, idx) => {
-                      const IconComp = stat.icon;
-                      const color = ACTIVITY_COLORS[idx % ACTIVITY_COLORS.length];
-                      return (
-                        <div key={stat.key} className="flex items-center gap-2">
-                          <IconComp className="w-3 h-3 shrink-0" style={{ color }} />
-                          <span className="text-[10px] font-semibold text-gray-300 w-24 truncate">{stat.label}</span>
-                          <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
-                            <div className="h-full rounded-full" style={{ width: `${stat.pct}%`, backgroundColor: color }} />
-                          </div>
-                          <span className="text-[10px] font-bold w-10 text-right" style={{ color: '#00FFB6' }}>{stat.pct.toFixed(1).replace('.', ',')}%</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-              {/* Separator */}
-              <div className="w-px bg-white/[0.06] self-stretch" />
-
-              {/* Progress Card - Enhanced */}
-              <div className="relative bg-white/[0.03] px-5 py-3 rounded-xl border border-white/[0.06] overflow-hidden min-w-[280px] flex flex-col justify-center">
-                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#742CFF] via-[#9B4DFF] to-[#00FFB6]" />
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[8px] uppercase tracking-widest text-gray-500 font-semibold">Desafio 45 Dias</span>
-                  <span className="text-[10px] font-bold text-white bg-white/[0.06] px-2 py-0.5 rounded-md">Dia {progress.currentDay}<span className="text-gray-500 font-medium"> / 45</span></span>
-                </div>
-
-                {/* Countdown */}
-                <div className="flex items-center gap-1.5 mb-2">
-                  <Timer className="w-3.5 h-3.5 text-accent shrink-0" strokeWidth={2.5} />
-                  <div className="flex items-center gap-1">
-                    {[
-                      { value: countdown.days, label: 'd' },
-                      { value: countdown.hours, label: 'h' },
-                      { value: countdown.minutes, label: 'm' },
-                      { value: countdown.seconds, label: 's' }
-                    ].map((unit, i) => (
-                      <div key={unit.label} className="flex items-baseline">
-                        {i > 0 && <span className="text-gray-600 mx-0.5 text-[10px]">:</span>}
-                        <span className={`text-sm font-black text-white tabular-nums w-5 text-center ${unit.label === 's' ? 'animate-tick' : ''}`}>{String(unit.value).padStart(2, '0')}</span>
-                        <span className="text-[8px] text-gray-500 font-semibold">{unit.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Progress Bar */}
-                <div className="relative w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                  <div
-                    className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out"
-                    style={{ width: `${progress.pct}%`, background: 'linear-gradient(90deg, #742CFF, #9B4DFF, #00FFB6)', boxShadow: '0 0 14px rgba(116,44,255,0.5), 0 0 6px rgba(0,255,182,0.3)' }}
-                  />
-                </div>
-                <div className="flex justify-between mt-1">
-                  <span className="text-[8px] text-gray-600 font-semibold">0%</span>
-                  <span className="text-[8px] font-bold" style={{ color: '#00FFB6' }}>{progress.pct.toFixed(1).replace('.', ',')}%</span>
-                  <span className="text-[8px] text-gray-600 font-semibold">100%</span>
-                </div>
-              </div>
+      {/* ═══ HEADER CLARO ═══ */}
+      <header className="relative z-10 border-b border-white/[0.06] bg-[#0a0a0f]/90 backdrop-blur-md shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+          
+          <div className="flex items-center gap-4">
+            <img src={TD_LOGO_URL} alt="TD Business" className="w-12 h-12 rounded-xl object-cover border border-white/10 shadow-sm bg-[#12121a]" />
+            <div className="h-8 w-px bg-white/5" />
+            <div>
+              <h1 className="text-2xl font-black text-white tracking-tight italic uppercase">
+                GYM RATS <span className="text-blue-500"> 2026.2</span>
+              </h1>
+              <p className="text-xs text-gray-500 font-semibold uppercase tracking-widest flex items-center gap-1.5 mt-0.5">
+                <Users className="w-3.5 h-3.5" /> {rankingData.length} Equipes
+              </p>
             </div>
           </div>
-        </header>
 
-        {/* ═══ MEDIA FEED ═══ */}
-        {feedData.length > 0 && (
-          <div className="relative z-10 border-b border-white/[0.06] bg-[#08080d]/60 py-4 overflow-hidden">
-            <div className="flex w-max animate-scroll hover:pause">
-              {[...feedData, ...feedData].map((url, idx) => (
-                <MediaItem key={`${idx}-${url}`} url={url} />
-              ))}
-            </div>
-
-            {/* Gradient Overlays */}
-            <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-[#0a0a0f] to-transparent pointer-events-none" />
-            <div className="absolute inset-y-0 right-0 w-28 bg-gradient-to-l from-[#0a0a0f] to-transparent pointer-events-none" />
-
-            <div className="absolute top-2 left-8 text-[9px] font-semibold uppercase tracking-widest text-white/40 bg-black/50 px-3 py-1 rounded-lg backdrop-blur-sm pointer-events-none flex items-center gap-1.5 border border-white/5">
-              <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span></span>
-              <Instagram className="w-3 h-3" /> Feed dos Participantes
-            </div>
+          <div className="flex items-stretch gap-3 overflow-x-auto pb-1">
+            <StatCard icon={Route} color="text-green-500" value={totalKm} label="Km Percorridos" />
+            <StatCard icon={Trophy} color="text-blue-500" value={rankingData.reduce((sum, t) => sum + t.total, 0)} label="Total Check-Ins" />
+            
+            {/* NOVO COUNTDOWN COMPONENT */}
+            <ChallengeCountdown startDate={CHALLENGE_START} endDate={CHALLENGE_END} />
           </div>
-        )}
+        </div>
+      </header>
 
-        {/* ═══ MAIN CONTENT ═══ */}
-        <main className="relative z-10 flex-1 px-8 py-6 overflow-hidden">
-          <RankingView data={rankingData} fields={fields} />
-        </main>
+      {/* ═══ MEDIA FEED CLARO ═══ */}
+      {feedData.length > 0 && (
+        <div className="relative z-10 border-b border-white/[0.06] bg-[#08080d]/60 py-4 overflow-hidden">
+          <style>{`
+            @keyframes scroll {
+              0% { transform: translateX(0); }
+              100% { transform: translateX(-50%); }
+            }
+            .animate-scroll {
+              animation: scroll 250s linear infinite;
+            }
+            .animate-scroll:hover {
+              animation-play-state: paused;
+            }
+            @keyframes float {
+              0%, 100% { transform: translateY(0); }
+              50% { transform: translateY(-12px); }
+            }
+            .animate-float {
+              animation: float 4s ease-in-out infinite;
+            }
+          `}</style>
+          <div className="flex w-max animate-scroll">
+            {[...feedData, ...feedData, ...feedData].map((url, idx) => (
+              <MediaItem key={`${idx}-${url}`} url={url} />
+            ))}
+          </div>
+          
+          <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#0a0a0f] to-transparent pointer-events-none" />
+          <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#0a0a0f] to-transparent pointer-events-none" />
+          
+          <div className="absolute top-2 left-6 text-[10px] font-bold uppercase tracking-widest text-white/50 bg-black/50 px-3 py-1.5 rounded-lg border border-white/5 flex items-center gap-2">
+            <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span></span>
+            <Instagram className="w-3.5 h-3.5" /> Feed Diário
+          </div>
+        </div>
+      )}
 
+      {/* ═══ MAIN CONTENT: PÓDIO ═══ */}
+      <main className="relative z-10 flex-1 overflow-x-auto overflow-y-auto w-full flex justify-center">
+        <div className="w-full max-w-[1600px] min-w-[900px] xl:min-w-[1200px] h-full px-2 sm:px-6 lg:px-12 py-6 flex flex-col justify-end" style={{ minHeight: '520px' }}>
+          {rankingData.length > 0 ? (
+            <Podium rankingData={rankingData} />
+          ) : (
+            <div className="text-gray-500 w-full text-center py-20 flex-1 flex items-center justify-center">Sem dados suficientes para exibir o pódio.</div>
+          )}
+        </div>
+      </main>
 
+      {/* ═══ FOOTER ═══ */}
+      <footer className="relative z-20 w-full py-4 flex items-center justify-center border-t border-white/[0.05] bg-[#06060a]">
+        <p className="text-xs text-gray-500 font-medium tracking-wide uppercase">
+          GYM RATS 2026 &bull; TDBUSINESS
+        </p>
+      </footer>
+
+    </div>
+  );
+}
+
+// Subcomponente de Cartão de Estatística
+function StatCard({ icon: Icon, color, value, label }) {
+  return (
+    <div className="bg-white/[0.03] px-4 py-2 rounded-xl border border-white/[0.06] flex flex-col justify-center min-w-[130px]">
+      <div className="flex items-center gap-2">
+        <Icon className={`w-4 h-4 ${color}`} />
+        <span className="text-lg font-black text-white"><AnimatedNumber value={value} /></span>
+      </div>
+      <span className="text-[9px] uppercase tracking-widest text-gray-500 font-bold mt-0.5">{label}</span>
+    </div>
+  );
+}
+
+// ═══ COMPONENTE DE PÓDIO ═══
+function Podium({ rankingData }) {
+  const positions = [
+    { rank: 4, height: '400px', accentColor: '#F97316', glowColor: 'rgba(249,115,22,0.25)', place: '4º' },
+    { rank: 2, height: '450px', accentColor: '#8B5CF6', glowColor: 'rgba(139,92,246,0.25)', place: '2º' },
+    { rank: 1, height: '500px', accentColor: '#3B82F6', glowColor: 'rgba(59,130,246,0.30)', place: '1º', isWinner: true },
+    { rank: 3, height: '450px', accentColor: '#EC4899', glowColor: 'rgba(236,72,153,0.25)', place: '3º' },
+    { rank: 5, height: '400px', accentColor: '#10B981', glowColor: 'rgba(16,185,129,0.25)', place: '5º' },
+  ];
+
+  // Garante que existam 5 posições, preenchendo com nulos se houver menos
+  const paddedData = [...rankingData];
+  while (paddedData.length < 5) paddedData.push(null);
+
+  const podiumRender = positions.map((pos) => {
+    // Usa o índice do array (rank - 1) para garantir que as 5 posições sejam preenchidas na ordem correta,
+    // independente de haver pontuações empatadas pulando números de rank.
+    const team = paddedData[pos.rank - 1];
+    return { ...pos, team };
+  });
+
+  return (
+    <div className="flex flex-col items-center justify-end w-full h-full max-w-[1600px] mx-auto relative">
+      {/* SPOTLIGHT BEHIND 1ST PLACE */}
+      <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-blue-500/15 rounded-full blur-[100px] pointer-events-none z-0" />
+
+      <div className="flex items-end justify-center gap-1.5 sm:gap-2 md:gap-3 lg:gap-5 w-full px-2 sm:px-6 z-10 relative">
+        {podiumRender.map((item, idx) => {
+          if (!item.team) return <div key={idx} className="flex-1 max-w-[320px]" />;
+          return <PodiumTeamCard key={idx} config={item} team={item.team} animDelay={idx * 120} />;
+        })}
+      </div>
+      {/* BARRA BASE DO PÓDIO (RODAPÉ DO PÓDIO - ESTILO PALCO) */}
+      <div className="w-full relative z-20 mt-[-2px]">
+        {/* Linha de LED superior do palco */}
+        <div className="w-full h-[2px] bg-gradient-to-r from-transparent via-blue-500/50 to-transparent shadow-[0_0_15px_rgba(59,130,246,0.6)]" />
+        
+        {/* Corpo principal do palco */}
+        <div 
+          className="w-full h-8 sm:h-12 rounded-b-2xl sm:rounded-b-[32px] border border-white/[0.05] border-t-0 shadow-[0_30px_60px_rgba(0,0,0,0.95)] overflow-hidden"
+          style={{
+            background: 'linear-gradient(to bottom, rgba(20,20,30,0.9) 0%, rgba(10,10,15,0.95) 100%)',
+            backdropFilter: 'blur(20px)'
+          }}
+        >
+          {/* Brilho interno do palco e reflexos */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent" />
+          <div className="absolute top-0 w-full h-1/2 bg-gradient-to-b from-white/[0.04] to-transparent" />
+        </div>
       </div>
     </div>
   );
 }
 
-function RankingView({ data, fields }) {
-  if (!fields.pair || !fields.points) {
-    return (
-      <div className="text-center py-20 bg-white/[0.02] rounded-2xl border border-dashed border-white/10">
-        <AlertCircle className="w-10 h-10 text-gray-600 mx-auto mb-3" />
-        <h3 className="text-lg font-medium text-gray-300">Dados insuficientes</h3>
-        <p className="text-gray-500 text-sm">Verifique as colunas da planilha.</p>
-      </div>
-    );
-  }
-
-  if (data.length === 0) return <div className="text-center p-10 text-gray-500">Sem dados.</div>;
-
-  const maxTotal = data.reduce((max, item) => Math.max(max, item.total), 0);
-  const podiumData = data.filter(item => item.rank <= 3);
-  const rest = data.filter(item => item.rank > 3);
-
+function PodiumTeamCard({ config, team, animDelay }) {
   return (
-    <div className="h-full flex gap-8">
-      {/* PODIO */}
-      <div className="w-[60%] flex flex-col gap-4 min-h-0">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xs uppercase tracking-[0.3em] text-gray-400 font-bold flex items-center gap-2.5">
-            <div className="w-1.5 h-5 bg-gradient-to-b from-[#742CFF] to-[#00FFB6] rounded-full" />
-            Pódio
-          </h2>
-          <div className="text-[10px] text-gray-500 bg-white/[0.03] px-2.5 py-0.5 rounded-lg border border-white/5 uppercase tracking-widest">{podiumData.length} duplas no pódio</div>
+    <div
+      className={`flex-1 max-w-[320px] flex flex-col relative z-10 transition-all duration-300 ${config.isWinner ? 'animate-float' : 'hover:-translate-y-2 animate-fade-in'}`}
+      style={{
+        height: config.height,
+        animationDelay: config.isWinner ? '0s' : `${animDelay}ms`,
+      }}
+    >
+      {/* BACKGROUND COM EFEITO DE VIDRO (Isolado para não cortar elementos absolutos) */}
+      <div 
+        className="absolute inset-0 rounded-t-3xl pointer-events-none -z-10"
+        style={{
+          background: 'rgba(14,14,22,0.85)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          border: `1px solid ${config.accentColor}40`,
+          borderTop: `4px solid ${config.accentColor}`,
+          borderBottom: 'none',
+          boxShadow: `0 0 40px ${config.glowColor}, 0 20px 40px rgba(0,0,0,0.5)`,
+        }}
+      />
+
+      {/* HEADER DO CARD */}
+      <div
+        className="px-2 py-3 flex flex-col items-center justify-center text-center text-white relative shrink-0 gap-2.5 rounded-t-[20px]"
+        style={{
+          background: `linear-gradient(160deg, ${config.accentColor}28 0%, ${config.accentColor}0a 100%)`,
+          borderBottom: `1px solid ${config.accentColor}35`,
+        }}
+      >
+        {/* ROW: Medalha + Nome do Time */}
+        <div className="flex items-center gap-2">
+          {/* Badge de posição */}
+          <div
+            className="w-7 h-7 rounded-full flex items-center justify-center font-black text-[11px] shadow-xl relative shrink-0"
+            style={{
+              background: config.rank === 1
+                ? 'linear-gradient(135deg, #FDE047 0%, #F59E0B 100%)'
+                : config.rank === 2
+                  ? 'linear-gradient(135deg, #F3F4F6 0%, #9CA3AF 100%)'
+                  : config.rank === 3
+                    ? 'linear-gradient(135deg, #FDBA74 0%, #B45309 100%)'
+                    : `${config.accentColor}1a`,
+              border: config.rank === 1
+                ? '2px solid #FEF08A'
+                : config.rank === 2
+                  ? '2px solid #FFFFFF'
+                  : config.rank === 3
+                    ? '2px solid #FED7AA'
+                    : `2px solid ${config.accentColor}55`,
+              color: config.rank <= 3 ? '#000000' : config.accentColor,
+              boxShadow: config.rank === 1 ? '0 0 25px rgba(245,158,11,0.7)' 
+                       : config.rank === 2 ? '0 0 15px rgba(156,163,175,0.4)'
+                       : config.rank === 3 ? '0 0 15px rgba(180,83,9,0.4)'
+                       : 'none',
+            }}
+          >
+            {config.isWinner && (
+              <Crown className="absolute -top-[18px] w-5 h-5 text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]" />
+            )}
+            {config.place}
+          </div>
+
+          <h3 
+            className="font-black text-[15px] uppercase tracking-wider leading-tight"
+            style={{
+              color: '#FFFFFF',
+              textShadow: `0 0 15px ${config.accentColor}90, 0 0 5px ${config.accentColor}`
+            }}
+          >
+            {team.name}
+          </h3>
         </div>
 
-        <div className="flex-1 grid grid-cols-1 gap-3 auto-rows-fr overflow-y-auto pr-1 scrollbar-thin">
-          {podiumData.map((item, idx) => (
-            <PodiumCard key={idx} rank={item.rank} data={item} animDelay={idx * 120} />
+        <div className="flex items-center justify-center gap-2 w-full">
+          {/* Badge Pontos */}
+          <div
+            className="px-2 py-0.5 rounded-md text-xs font-bold flex items-baseline gap-1"
+            style={{
+              background: `${config.accentColor}1a`,
+              border: `1px solid ${config.accentColor}40`,
+              color: config.accentColor,
+            }}
+          >
+            <span className="text-[13px] leading-none font-black">{team.total}</span>
+            <span className="text-[9px] uppercase tracking-widest opacity-70">pts</span>
+          </div>
+
+          {/* Badge KM */}
+          <div className="px-2 py-0.5 rounded-md text-xs font-bold flex items-baseline gap-1 bg-white/[0.03] border border-white/[0.05] text-gray-300">
+            <Route className="w-2.5 h-2.5 opacity-50 mr-0.5 self-center" />
+            <span className="text-[13px] leading-none font-black">{team.totalKm.toFixed(1)}</span>
+            <span className="text-[9px] uppercase tracking-widest opacity-50">km</span>
+          </div>
+        </div>
+      </div>
+
+      {/* LISTA DE MEMBROS */}
+      <div
+        className="flex-1 overflow-y-auto px-1 sm:px-2 py-2"
+        style={{ scrollbarWidth: 'thin', scrollbarColor: `${config.accentColor}30 transparent` }}
+      >
+        <div className={`flex flex-col mt-2 ${config.rank >= 4 ? 'gap-0.5' : 'gap-1.5'}`}>
+          {team.members.map((m, i) => (
+            <div
+              key={i}
+              className={`flex items-center justify-between px-3 rounded-lg transition-all duration-200 cursor-default ${config.rank >= 4 ? 'py-1' : 'py-2'}`}
+              style={{ background: 'transparent' }}
+              onMouseEnter={e => e.currentTarget.style.background = `${config.accentColor}12`}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
+              <div className="flex items-center gap-2 truncate">
+                <span
+                  className="font-mono text-[11px] font-bold w-4 text-right shrink-0"
+                  style={{ color: `${config.accentColor}88` }}
+                >
+                  {i + 1}.
+                </span>
+                <span className="font-semibold text-gray-200 text-[13px] truncate">
+                  {m.formattedName}
+                </span>
+              </div>
+              <div className="flex items-baseline gap-2.5 shrink-0 ml-2 text-right">
+                <div className="flex items-baseline gap-0.5">
+                  <span className="font-bold text-[12px] text-gray-400">{m.km.toFixed(1)}</span>
+                  <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">km</span>
+                </div>
+                <div className="flex items-baseline gap-0.5 w-[36px] justify-end">
+                  <span className="font-bold text-[14px]" style={{ color: config.accentColor }}>{m.points}</span>
+                  <span className="text-[9px] text-gray-600 font-bold">pts</span>
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       </div>
 
-      {/* DIVIDER */}
-      <div className="w-px animate-divider" />
-
-      {/* TABELA */}
-      <div className="w-[40%] flex flex-col gap-4 min-h-0">
-        {rest.length > 0 && (
-          <div className="flex-1 bg-white/[0.02] rounded-2xl border border-white/[0.06] overflow-hidden backdrop-blur-sm flex flex-col min-h-0">
-            <div className="px-6 py-3 border-b border-white/[0.06] flex justify-between items-center bg-white/[0.03] shrink-0">
-              <h3 className="font-semibold text-gray-300 text-xs uppercase tracking-wider flex items-center gap-2.5">
-                <div className="w-1.5 h-5 bg-gradient-to-b from-[#742CFF] to-[#00FFB6] rounded-full" />
-                Classificação Geral
-              </h3>
-              <span className="text-[10px] text-gray-500 bg-white/[0.04] px-2.5 py-0.5 rounded-lg border border-white/5">{rest.length} equipes</span>
-            </div>
-            <div className="divide-y divide-white/[0.03] overflow-y-auto flex-1 scrollbar-thin">
-              {rest.map((item, idx) => (
-                <div key={idx} className="animate-fade-in" style={{ animationDelay: `${(idx + podiumData.length) * 80}ms` }}>
-                  <div className="relative flex items-center px-6 py-3 hover:bg-white/[0.03] transition-all duration-200 group">
-                    <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#742CFF] opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-r" />
-                    <span className="w-9 font-mono text-gray-600 font-bold text-sm group-hover:text-[#742CFF] transition-colors">#{item.rank}</span>
-
-                    <div className="flex -space-x-2 mr-4">
-                      {item.members?.length > 0 ? (
-                        item.members.map((member, i) => (
-                          <Avatar key={i} src={member.image} className="w-8 h-8 rounded-full border-2 border-[#0a0a0f]" />
-                        ))
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-[#12121a] border-2 border-[#0a0a0f] flex items-center justify-center text-[9px] text-gray-600">?</div>
-                      )}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {item.members?.length > 0 ? (
-                          item.members.map((member, i) => (
-                            <React.Fragment key={i}>
-                              {i > 0 && <Users className="w-3 h-3 text-gray-700 shrink-0" />}
-                              <span className="font-semibold text-gray-300 group-hover:text-white transition-colors tracking-tight text-sm">
-                                {member.formattedName}
-                              </span>
-                              <span className="text-[9px] font-bold text-gray-500 bg-white/[0.04] border border-white/[0.06] px-1.5 py-0.5 rounded-md">
-                                {member.points}
-                              </span>
-                            </React.Fragment>
-                          ))
-                        ) : (
-                          <span className="font-semibold text-gray-300 text-sm">{item.name}</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="font-mono font-bold text-gray-400 bg-white/[0.03] px-3 py-1 rounded-lg text-xs border border-white/[0.06] group-hover:border-[#742CFF]/30 group-hover:text-[#00FFB6] group-hover:shadow-[0_0_12px_-3px_rgba(116,44,255,0.3)] transition-all duration-300">
-                        {item.total} pts
-                      </div>
-                      {maxTotal - item.total > 0 && (
-                        <span className="text-[9px] text-red-400/60 font-mono font-semibold">-{maxTotal - item.total}</span>
-                      )}
-                    </div>
-                  </div>
-                  {/* Mini progress bar */}
-                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/[0.02]">
-                    <div className="h-full rounded-r-full transition-all duration-1000" style={{ width: `${maxTotal > 0 ? (item.total / maxTotal * 100) : 0}%`, background: 'linear-gradient(90deg, #742CFF, #00FFB6)', opacity: 0.3 }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
 
-function PodiumCard({ rank, data, animDelay = 0 }) {
-  const isFirst = rank === 1;
-  const isSecond = rank === 2;
-  const isThird = rank === 3;
-
-  let styles = {
-    card: 'bg-white/[0.02] border-white/5 text-gray-400 hover:border-white/10',
-    iconColor: 'text-gray-600',
-    badge: 'bg-white/5 text-gray-400 border-white/10',
-    glow: '',
-    accentText: 'text-gray-400',
-  };
-
-  if (isFirst) {
-    styles = {
-      card: 'bg-gradient-to-r from-brand/10 via-brand/5 to-transparent border-brand/30 text-white ring-1 ring-brand/10',
-      iconColor: 'text-accent',
-      badge: 'bg-brand/10 text-brand-300 border-brand/20 backdrop-blur-md shadow-[0_0_15px_-3px_rgba(116,44,255,0.3)]',
-      glow: 'shadow-[0_0_50px_-10px_rgba(116,44,255,0.3)] scale-[1.02] border-brand/40',
-      accentText: 'text-accent',
-    };
-  } else if (isSecond) {
-    styles = {
-      card: 'bg-gradient-to-r from-white/[0.04] to-transparent border-white/10 text-gray-200',
-      iconColor: 'text-gray-400',
-      badge: 'bg-white/5 text-gray-300 border-white/10 backdrop-blur-md shadow-[0_0_15px_-3px_rgba(255,255,255,0.1)]',
-      glow: 'shadow-[0_0_20px_-5px_rgba(255,255,255,0.05)]',
-      accentText: 'text-gray-400',
-    };
-  } else if (isThird) {
-    styles = {
-      card: 'bg-gradient-to-r from-amber-900/10 to-transparent border-amber-800/30 text-amber-100',
-      iconColor: 'text-amber-500',
-      badge: 'bg-amber-500/10 text-amber-200 border-amber-500/20 backdrop-blur-md shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]',
-      glow: 'shadow-[0_0_20px_-5px_rgba(245,158,11,0.1)]',
-      accentText: 'text-amber-400',
-    };
-  }
-
-  const Icon = isFirst ? Crown : Medal;
-
-  return (
-    <div className={`
-      relative flex items-center gap-5 p-5 rounded-2xl border transition-all duration-300 hover:translate-x-1 overflow-hidden h-full animate-fade-in
-      ${styles.card} ${styles.glow} ${isFirst ? 'shimmer-overlay' : ''}
-    `} style={{ animationDelay: `${animDelay}ms` }}>
-      {/* Rank Badge */}
-      <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-lg ${styles.badge}`}>
-        {isFirst ? '🥇' : isSecond ? '🥈' : isThird ? '🥉' : `#${rank}`}
-      </div>
-
-      {/* Avatares */}
-      <div className="flex -space-x-3 shrink-0 pl-2">
-        {data.members?.length > 0 ? (
-          data.members.map((member, idx) => (
-            <Avatar
-              key={idx}
-              src={member.image}
-              className={`rounded-full border-2 border-[#0a0a0f] object-cover ring-1 ring-black/50 ${isFirst ? 'w-14 h-14' : 'w-10 h-10'}`}
-              fallbackText="?"
-            />
-          ))
-        ) : (
-          <div className={`rounded-full border-2 border-[#0a0a0f] bg-[#12121a] flex items-center justify-center text-gray-600 font-bold ring-1 ring-black/50 ${isFirst ? 'w-14 h-14' : 'w-10 h-10'} text-sm`}>?</div>
-        )}
-      </div>
-
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <Icon className={`w-4 h-4 shrink-0 ${styles.iconColor}`} strokeWidth={1.5} />
-          {data.members?.length > 0 ? (
-            data.members.map((member, idx) => (
-              <React.Fragment key={idx}>
-                {idx > 0 && <Users className="w-3.5 h-3.5 text-gray-700 shrink-0" />}
-                <span className={`font-bold leading-tight tracking-tight ${isFirst ? 'text-base' : 'text-sm opacity-90'}`}>
-                  {member.formattedName}
-                </span>
-                <span className={`text-[9px] font-bold px-1.5 py-0 rounded-full bg-white/5 border border-white/5 ${styles.accentText}`}>
-                  {member.points}
-                </span>
-              </React.Fragment>
-            ))
-          ) : (
-            <h3 className={`font-bold leading-tight truncate tracking-tight ${isFirst ? 'text-base' : 'text-sm opacity-90'}`}>
-              {data.name}
-            </h3>
-          )}
-        </div>
-      </div>
-
-      {/* Pontuacao */}
-      <div className={`shrink-0 font-mono font-bold tracking-tight ${isFirst ? 'text-2xl' : 'text-lg'}`}>
-        {data.total} <span className="text-[10px] font-sans font-normal opacity-50">pts</span>
-      </div>
-
-
-    </div>
-  );
-}
