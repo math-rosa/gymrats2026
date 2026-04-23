@@ -7,11 +7,24 @@
 }
 
 html,
-body,
-#root {
-  height: 100%;
-  overflow: hidden;
+body {
+  overflow-x: hidden;
 }
+
+#root {
+  min-height: 100%;
+}
+
+/* Desktop: trava o scroll na tela inteira */
+@media (min-width: 768px) {
+  html,
+  body,
+  #root {
+    height: 100%;
+    overflow: hidden;
+  }
+}
+
 
 body {
   margin: 0;

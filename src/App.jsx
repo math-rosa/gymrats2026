@@ -342,7 +342,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#030305] text-gray-200 font-sans flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-[#030305] text-gray-200 font-sans flex flex-col relative overflow-x-hidden">
       {/* ═══ PREMIUM BACKGROUND ═══ */}
       <div className="fixed inset-0 pointer-events-none z-0">
         {/* Animated Aurora Orbs */}
@@ -365,36 +365,34 @@ export default function App() {
         <div className="absolute inset-0 bg-black/40 pointer-events-none" style={{ background: 'radial-gradient(circle at 50% 50%, transparent 20%, rgba(3,3,5,0.8) 100%)' }} />
       </div>
 
-      {/* ═══ HEADER CLARO ═══ */}
+      {/* ═══ HEADER ═══ */}
       <header className="relative z-10 border-b border-white/[0.06] bg-[#0a0a0f]/90 backdrop-blur-md shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row sm:flex-wrap items-center justify-between gap-3">
           
-          <div className="flex items-center gap-4">
-            <img src={TD_LOGO_URL} alt="TD Business" className="w-12 h-12 rounded-xl object-cover border border-white/10 shadow-sm bg-[#12121a]" />
-            <div className="h-8 w-px bg-white/5" />
-            <div>
-              <h1 className="text-2xl font-black text-white tracking-tight italic uppercase">
-                GYM RATS <span className="text-blue-500"> 2026.2</span>
-              </h1>
-              <p className="text-xs text-gray-500 font-semibold uppercase tracking-widest flex items-center gap-1.5 mt-0.5">
-                <Users className="w-3.5 h-3.5" /> {rankingData.length} Equipes
-              </p>
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+            <div className="flex items-center gap-3">
+              <img src={TD_LOGO_URL} alt="TD Business" className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl object-cover border border-white/10 shadow-sm bg-[#12121a]" />
+              <div className="h-7 w-px bg-white/5" />
+              <div>
+                <h1 className="text-lg sm:text-2xl font-black text-white tracking-tight italic uppercase">
+                  GYM RATS <span className="text-blue-500">2026.2</span>
+                </h1>
+                <p className="text-[10px] sm:text-xs text-gray-500 font-semibold uppercase tracking-widest flex items-center gap-1.5">
+                  <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> {rankingData.length} Equipes
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-stretch gap-3 overflow-x-auto pb-1">
-            <StatCard icon={Route} color="text-green-500" value={totalKm} label="Km Percorridos" />
-            <StatCard icon={Trophy} color="text-blue-500" value={rankingData.reduce((sum, t) => sum + t.total, 0)} label="Total Check-Ins" />
-            
-            {/* NOVO COUNTDOWN COMPONENT */}
+          <div className="flex items-stretch justify-center gap-2 sm:gap-3 pb-0.5 w-full sm:w-auto">
             <ChallengeCountdown startDate={CHALLENGE_START} endDate={CHALLENGE_END} />
           </div>
         </div>
       </header>
 
-      {/* ═══ MEDIA FEED CLARO ═══ */}
+      {/* ═══ MEDIA FEED — oculto em mobile ═══ */}
       {feedData.length > 0 && (
-        <div className="relative z-10 border-b border-white/[0.06] bg-[#08080d]/60 py-4 overflow-hidden">
+        <div className="hidden md:block relative z-10 border-b border-white/[0.06] bg-[#08080d]/60 py-4 overflow-hidden">
           <style>{`
             @keyframes scroll {
               0% { transform: translateX(0); }
@@ -431,13 +429,16 @@ export default function App() {
       )}
 
       {/* ═══ MAIN CONTENT: PÓDIO ═══ */}
-      <main className="relative z-10 flex-1 overflow-x-auto overflow-y-auto w-full flex justify-center">
-        <div className="w-full max-w-[1600px] min-w-[900px] xl:min-w-[1200px] h-full px-2 sm:px-6 lg:px-12 py-6 flex flex-col justify-end" style={{ minHeight: '520px' }}>
-          {rankingData.length > 0 ? (
-            <Podium rankingData={rankingData} />
-          ) : (
-            <div className="text-gray-500 w-full text-center py-20 flex-1 flex items-center justify-center">Sem dados suficientes para exibir o pódio.</div>
-          )}
+      <main className="relative z-10 md:flex-1 md:overflow-y-auto w-full flex justify-center">
+        {/* Desktop: overflow-x permitido para o layout horizontal do pódio */}
+        <div className="w-full max-w-[1600px] px-2 sm:px-6 lg:px-12 py-4 sm:py-6 md:overflow-x-auto md:h-full">
+          <div className="md:min-w-[900px] xl:min-w-[1200px] md:flex md:flex-col md:justify-end md:h-full" style={{ minHeight: '520px' }}>
+            {rankingData.length > 0 ? (
+              <Podium rankingData={rankingData} />
+            ) : (
+              <div className="text-gray-500 w-full text-center py-20">Sem dados suficientes para exibir o pódio.</div>
+            )}
+          </div>
         </div>
       </main>
 
@@ -511,23 +512,33 @@ function Podium({ rankingData }) {
     return { ...pos, accentColor: colors.accentColor, glowColor: colors.glowColor, team };
   });
 
+  // Ordem no mobile: 1º, 2º, 3º, 4º, 5º (sequencial)
+  const mobilePodiumRender = [...podiumRender].sort((a, b) => a.rank - b.rank);
+
   return (
     <div className="flex flex-col items-center justify-end w-full h-full max-w-[1600px] mx-auto relative">
       {/* SPOTLIGHT BEHIND 1ST PLACE */}
       <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-blue-500/15 rounded-full blur-[100px] pointer-events-none z-0" />
 
-      <div className="flex items-end justify-center gap-1.5 sm:gap-2 md:gap-3 lg:gap-5 w-full px-2 sm:px-6 z-10 relative">
+      {/* ── DESKTOP: layout horizontal em coluna de arena ── */}
+      <div className="hidden md:flex items-end justify-center gap-1.5 sm:gap-2 md:gap-3 lg:gap-5 w-full px-2 sm:px-6 z-10 relative">
         {podiumRender.map((item, idx) => {
           if (!item.team) return <div key={idx} className="flex-1 max-w-[320px]" />;
-          return <PodiumTeamCard key={idx} config={item} team={item.team} animDelay={idx * 120} />;
+          return <PodiumTeamCard key={idx} config={item} team={item.team} isMobile={false} />;
         })}
       </div>
-      {/* BARRA BASE DO PÓDIO (RODAPÉ DO PÓDIO - ESTILO PALCO) */}
-      <div className="w-full relative z-20 mt-[-2px]">
-        {/* Linha de LED superior do palco */}
+
+      {/* ── MOBILE: cards empilhados do 1º ao 5º ── */}
+      <div className="flex md:hidden flex-col gap-3 w-full px-3 z-10 relative pb-4">
+        {mobilePodiumRender.map((item, idx) => {
+          if (!item.team) return null;
+          return <PodiumTeamCard key={idx} config={item} team={item.team} isMobile={true} />;
+        })}
+      </div>
+
+      {/* BARRA BASE DO PÓDIO — somente desktop */}
+      <div className="hidden md:block w-full relative z-20 mt-[-2px]">
         <div className="w-full h-[2px] bg-gradient-to-r from-transparent via-blue-500/50 to-transparent shadow-[0_0_15px_rgba(59,130,246,0.6)]" />
-        
-        {/* Corpo principal do palco */}
         <div 
           className="w-full h-8 sm:h-12 rounded-b-2xl sm:rounded-b-[32px] border border-white/[0.05] border-t-0 shadow-[0_30px_60px_rgba(0,0,0,0.95)] overflow-hidden"
           style={{
@@ -535,7 +546,6 @@ function Podium({ rankingData }) {
             backdropFilter: 'blur(20px)'
           }}
         >
-          {/* Brilho interno do palco e reflexos */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent" />
           <div className="absolute top-0 w-full h-1/2 bg-gradient-to-b from-white/[0.04] to-transparent" />
         </div>
@@ -544,29 +554,25 @@ function Podium({ rankingData }) {
   );
 }
 
-function PodiumTeamCard({ config, team, animDelay }) {
-  // Calcula um delay de levitação único por posição
-  const levitateDelay = `${(config.rank - 1) * 1.3}s`;
-
+function PodiumTeamCard({ config, team, isMobile }) {
   return (
     <div
-      className="flex-1 max-w-[320px] flex flex-col relative z-10 animate-levitate"
-      style={{
-        height: config.height,
-        animationDelay: levitateDelay,
-        animationDuration: `${5 + config.rank * 0.7}s`,
-      }}
+      className={isMobile
+        ? "w-full flex flex-col relative z-10 rounded-2xl overflow-hidden"
+        : "flex-1 max-w-[320px] flex flex-col relative z-10"
+      }
+      style={isMobile ? {} : { height: config.height }}
     >
-      {/* BACKGROUND COM EFEITO DE VIDRO (Isolado para não cortar elementos absolutos) */}
+      {/* BACKGROUND COM EFEITO DE VIDRO */}
       <div 
-        className="absolute inset-0 rounded-t-3xl pointer-events-none -z-10"
+        className={isMobile ? "absolute inset-0 rounded-2xl pointer-events-none -z-10" : "absolute inset-0 rounded-t-3xl pointer-events-none -z-10"}
         style={{
           background: 'rgba(14,14,22,0.85)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           border: `1px solid ${config.accentColor}40`,
           borderTop: `4px solid ${config.accentColor}`,
-          borderBottom: 'none',
+          borderBottom: isMobile ? `1px solid ${config.accentColor}30` : 'none',
           boxShadow: `0 0 40px ${config.glowColor}, 0 20px 40px rgba(0,0,0,0.5)`,
         }}
       />
@@ -653,8 +659,8 @@ function PodiumTeamCard({ config, team, animDelay }) {
 
       {/* LISTA DE MEMBROS */}
       <div
-        className="flex-1 overflow-y-auto px-1 sm:px-2 py-2"
-        style={{ scrollbarWidth: 'thin', scrollbarColor: `${config.accentColor}30 transparent` }}
+        className={isMobile ? "px-2 py-2" : "flex-1 overflow-y-auto px-1 sm:px-2 py-2"}
+        style={isMobile ? {} : { scrollbarWidth: 'thin', scrollbarColor: `${config.accentColor}30 transparent` }}
       >
         <div className={`flex flex-col mt-2 ${config.rank >= 4 ? 'gap-0.5' : 'gap-1.5'}`}>
           {team.members.map((m, i) => (
