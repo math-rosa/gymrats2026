@@ -558,7 +558,7 @@ function PodiumTeamCard({ config, team, isMobile }) {
   return (
     <div
       className={isMobile
-        ? "w-full flex flex-col relative z-10 rounded-2xl overflow-hidden"
+        ? "w-full flex flex-col relative z-10 rounded-2xl"
         : "flex-1 max-w-[320px] flex flex-col relative z-10"
       }
       style={isMobile ? {} : { height: config.height }}
@@ -613,7 +613,7 @@ function PodiumTeamCard({ config, team, isMobile }) {
             }}
           >
             {config.isWinner && (
-              <Crown className="absolute -top-[18px] w-5 h-5 text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]" />
+              <Crown className="absolute -top-[18px] z-50 w-5 h-5 text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]" />
             )}
             {config.place}
           </div>
