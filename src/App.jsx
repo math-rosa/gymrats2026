@@ -385,6 +385,11 @@ export default function App() {
           </div>
 
           <div className="flex items-stretch justify-center gap-2 sm:gap-3 pb-0.5 w-full sm:w-auto">
+            {/* KPIs — somente desktop */}
+            <div className="hidden md:flex items-stretch gap-2">
+              <StatCard icon={Route} color="text-green-500" value={totalKm} label="Km Percorridos" />
+              <StatCard icon={Trophy} color="text-blue-500" value={rankingData.reduce((sum, t) => sum + t.total, 0)} label="Total Check-Ins" />
+            </div>
             <ChallengeCountdown startDate={CHALLENGE_START} endDate={CHALLENGE_END} />
           </div>
         </div>
