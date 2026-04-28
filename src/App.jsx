@@ -547,8 +547,8 @@ export default function App() {
 
       {/* ═══ MAIN CONTENT: PÓDIO ═══ */}
       <main className="relative z-10 flex-1 overflow-y-auto md:overflow-hidden w-full flex justify-center">
-        <div className="w-full max-w-[1600px] px-2 sm:px-6 lg:px-12 pt-4 sm:pt-6 pb-4 md:pb-0 h-full">
-          <div className="md:min-w-[900px] xl:min-w-[1200px] flex flex-col justify-end h-full">
+        <div className="w-full max-w-[1600px] px-2 sm:px-6 lg:px-12 pt-4 sm:pt-6 pb-4 md:pb-0 md:h-full">
+          <div className="md:min-w-[900px] xl:min-w-[1200px] flex flex-col md:justify-end md:h-full">
             {rankingData.length > 0 ? (
               <Podium rankingData={rankingData} />
             ) : (
@@ -625,7 +625,7 @@ function Podium({ rankingData }) {
   const mobilePodiumRender = [...podiumRender].sort((a, b) => a.rank - b.rank);
 
   return (
-    <div className="flex flex-col items-center justify-end w-full h-full max-w-[1600px] mx-auto relative">
+    <div className="flex flex-col items-center md:justify-end w-full md:h-full max-w-[1600px] mx-auto relative">
       {/* SPOTLIGHT BEHIND 1ST PLACE */}
       <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-blue-500/15 rounded-full blur-[100px] pointer-events-none z-0" />
 
