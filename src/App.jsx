@@ -272,6 +272,8 @@ export default function App() {
 
       globalKm += km;
 
+      const extraPoints = item['PTS EXTRAS'] || "0";
+
       if (!scores[teamName]) {
         scores[teamName] = { id: teamName, name: teamName, members: [], total: 0, totalKm: 0 };
       }
@@ -283,12 +285,14 @@ export default function App() {
       if (existingMember) {
         existingMember.points += points;
         existingMember.km += km;
+        if (extraPoints !== "0") existingMember.extraPoints = extraPoints;
       } else {
         scores[teamName].members.push({
           name: memberName,
           formattedName: toTitleCase(memberName),
           points: points,
-          km: km
+          km: km,
+          extraPoints: extraPoints
         });
       }
     });
@@ -528,7 +532,7 @@ function Podium({ rankingData }) {
       {/* ── DESKTOP: layout horizontal em coluna de arena ── */}
       <div className="hidden md:flex items-end justify-center gap-1.5 sm:gap-2 md:gap-3 lg:gap-5 w-full px-2 sm:px-6 z-10 relative">
         {podiumRender.map((item, idx) => {
-          if (!item.team) return <div key={idx} className="flex-1 max-w-[320px]" />;
+          if (!item.team) return <div key={idx} className="w-[20%] min-w-0" />;
           return <PodiumTeamCard key={idx} config={item} team={item.team} isMobile={false} />;
         })}
       </div>
@@ -564,7 +568,7 @@ function PodiumTeamCard({ config, team, isMobile }) {
     <div
       className={isMobile
         ? "w-full flex flex-col relative z-10 rounded-2xl"
-        : "flex-1 max-w-[320px] flex flex-col relative z-10"
+        : "w-[20%] min-w-0 flex flex-col relative z-10"
       }
       style={isMobile ? {} : { height: config.height }}
     >
@@ -653,12 +657,6 @@ function PodiumTeamCard({ config, team, isMobile }) {
             </div>
           </div>
 
-          {/* Badge KM */}
-          <div className="px-2 py-0.5 rounded-md text-xs font-bold flex items-baseline gap-1 bg-white/[0.03] border border-white/[0.05] text-gray-300">
-            <Route className="w-2.5 h-2.5 opacity-50 mr-0.5 self-center" />
-            <span className="text-[13px] leading-none font-black"><AnimatedNumber value={parseFloat(team.totalKm.toFixed(1))} isFloat /></span>
-            <span className="text-[9px] uppercase tracking-widest opacity-50">km</span>
-          </div>
         </div>
       </div>
 
@@ -686,16 +684,15 @@ function PodiumTeamCard({ config, team, isMobile }) {
                 <span className="font-semibold text-gray-200 text-[13px] truncate">
                   {m.formattedName}
                 </span>
+                {m.extraPoints && m.extraPoints !== "0" && (
+                  <span className="ml-1.5 text-[10px] font-black text-emerald-400 shrink-0">
+                    +{m.extraPoints}
+                  </span>
+                )}
               </div>
-              <div className="flex items-baseline gap-2.5 shrink-0 ml-2 text-right">
-                <div className="flex items-baseline gap-0.5">
-                  <span className="font-bold text-[12px] text-gray-400">{m.km.toFixed(1)}</span>
-                  <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">km</span>
-                </div>
-                <div className="flex items-baseline gap-0.5 w-[36px] justify-end">
-                  <span className="font-bold text-[14px]" style={{ color: config.accentColor }}>{m.points}</span>
-                  <span className="text-[9px] text-gray-600 font-bold">pts</span>
-                </div>
+              <div className="flex items-baseline gap-0.5 w-[36px] justify-end">
+                <span className="font-bold text-[14px]" style={{ color: config.accentColor }}>{m.points}</span>
+                <span className="text-[9px] text-gray-600 font-bold">pts</span>
               </div>
             </div>
           ))}
