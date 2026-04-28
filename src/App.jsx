@@ -753,10 +753,10 @@ function PodiumTeamCard({ config, team, isMobile }) {
           </h3>
         </div>
 
-        <div className="flex items-center justify-center gap-2 w-full">
-          {/* Badge Pontos e Destaque */}
+        <div className="flex items-center justify-center w-full">
+          {/* Badge Pontos com Fórmula */}
           <div
-            className="px-2 py-0.5 rounded-md text-xs font-bold flex items-baseline gap-1"
+            className="px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5"
             style={{
               background: `${config.accentColor}1a`,
               border: `1px solid ${config.accentColor}40`,
@@ -764,14 +764,16 @@ function PodiumTeamCard({ config, team, isMobile }) {
             }}
           >
             <span className="text-[13px] leading-none font-black"><AnimatedNumber value={team.total} /></span>
-            <span className="text-[9px] uppercase tracking-widest opacity-80">pts</span>
-            <div className="flex items-center ml-1 pl-1.5 border-l border-white/[0.15]">
-              <span className="text-[11px] font-black text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse">
-                +15
+            <span className="text-[11px] opacity-70 font-bold">+</span>
+            <span className="text-[11px] font-black text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]">15</span>
+            <span className="text-[11px] opacity-70 font-bold">=</span>
+            <div className="flex items-baseline gap-0.5 ml-0.5">
+              <span className="text-[14px] leading-none font-black text-white">
+                <AnimatedNumber value={team.total + 15} />
               </span>
+              <span className="text-[9px] uppercase tracking-widest opacity-60 text-white">pts</span>
             </div>
           </div>
-
         </div>
       </div>
 
