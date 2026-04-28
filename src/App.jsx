@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import { Loader2, AlertCircle, Trophy, Users, Route, Instagram, Timer, Crown } from 'lucide-react';
 import TD_LOGO_URL from './tdbusiness_logo.jpg';
 
@@ -112,6 +113,101 @@ function MediaItem({ url }) {
     </div>
   );
 }
+// ═══ TOOLTIP DO MEMBRO ═══
+function MemberTooltip({ member, accentColor, children }) {
+  const [show, setShow] = useState(false);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const triggerRef = useRef(null);
+
+  const handleMouseEnter = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setPos({ x: rect.left + rect.width / 2, y: rect.top });
+    }
+    setShow(true);
+  };
+
+  const weeks = member.weeks || {};
+  const weekData = [
+    { label: 'Sem 1', value: weeks.s1 },
+    { label: 'Sem 2', value: weeks.s2 },
+    { label: 'Sem 3', value: weeks.s3 },
+    { label: 'Sem 4', value: weeks.s4 },
+    { label: 'Sem 5', value: weeks.s5 },
+    { label: 'Sem 6', value: weeks.s6 },
+  ];
+
+  return (
+    <>
+      <div
+        ref={triggerRef}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={() => setShow(false)}
+      >
+        {children}
+      </div>
+      {show && ReactDOM.createPortal(
+        <div
+          className="fixed z-[9999] pointer-events-none"
+          style={{
+            left: pos.x,
+            top: pos.y,
+            transform: 'translate(-50%, -100%)',
+          }}
+        >
+          <div
+            className="relative mb-2 px-4 py-3 rounded-xl border shadow-2xl min-w-[220px]"
+            style={{
+              background: 'rgba(12,12,20,0.95)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              borderColor: `${accentColor}50`,
+              boxShadow: `0 0 30px ${accentColor}20, 0 20px 40px rgba(0,0,0,0.6)`,
+            }}
+          >
+            {/* Header */}
+            <div className="flex items-center gap-2 mb-2.5 pb-2 border-b border-white/[0.08]">
+              <div className="w-1.5 h-1.5 rounded-full" style={{ background: accentColor }} />
+              <span className="font-bold text-white text-[13px] truncate">{member.formattedName}</span>
+            </div>
+
+            {/* Grid de semanas */}
+            <div className="grid grid-cols-3 gap-x-3 gap-y-1.5">
+              {weekData.map((w) => (
+                <div key={w.label} className="flex items-baseline justify-between gap-1.5">
+                  <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold">{w.label}</span>
+                  <span className="text-[12px] font-black" style={{ color: (w.value && w.value !== '0') ? accentColor : '#4B5563' }}>
+                    {w.value || '0'}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Totais */}
+            <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-white/[0.08]">
+              {member.extraPoints && member.extraPoints !== '0' && (
+                <div className="flex items-baseline gap-1">
+                  <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold">Extras</span>
+                  <span className="text-[12px] font-black text-emerald-400">+{member.extraPoints}</span>
+                </div>
+              )}
+              <div className="flex items-baseline gap-1 ml-auto">
+                <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold">Total</span>
+                <span className="text-[14px] font-black" style={{ color: accentColor }}>{member.points}</span>
+                <span className="text-[9px] text-gray-600 font-bold">pts</span>
+              </div>
+            </div>
+
+            {/* Seta */}
+            <div className="absolute left-1/2 -translate-x-1/2 -bottom-[6px] w-3 h-3 rotate-45" style={{ background: 'rgba(12,12,20,0.95)', borderRight: `1px solid ${accentColor}50`, borderBottom: `1px solid ${accentColor}50` }} />
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
+  );
+}
+
 // ═══ COMPONENTE DE NÚMERO ANIMADO ═══
 function AnimatedNumber({ value, isFloat = false }) {
   const [current, setCurrent] = useState(0);
@@ -274,6 +370,16 @@ export default function App() {
 
       const extraPoints = item['PTS EXTRAS'] || "0";
 
+      // Dados semanais para tooltip
+      const weeks = {
+        s1: item['SEMANA 1'] || '0',
+        s2: item['SEMANA 2'] || '0',
+        s3: item['SEMANA 3'] || '0',
+        s4: item['SEMANA 4'] || '0',
+        s5: item['SEMANA 5'] || '0',
+        s6: item['SEMANA 6'] || '0',
+      };
+
       if (!scores[teamName]) {
         scores[teamName] = { id: teamName, name: teamName, members: [], total: 0, totalKm: 0 };
       }
@@ -286,13 +392,15 @@ export default function App() {
         existingMember.points += points;
         existingMember.km += km;
         if (extraPoints !== "0") existingMember.extraPoints = extraPoints;
+        existingMember.weeks = weeks;
       } else {
         scores[teamName].members.push({
           name: memberName,
           formattedName: toTitleCase(memberName),
           points: points,
           km: km,
-          extraPoints: extraPoints
+          extraPoints: extraPoints,
+          weeks: weeks
         });
       }
     });
@@ -346,7 +454,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#030305] text-gray-200 font-sans flex flex-col relative overflow-x-hidden">
+    <div className="h-screen bg-[#030305] text-gray-200 font-sans flex flex-col relative overflow-hidden">
       {/* ═══ PREMIUM BACKGROUND ═══ */}
       <div className="fixed inset-0 pointer-events-none z-0">
         {/* Animated Aurora Orbs */}
@@ -438,10 +546,9 @@ export default function App() {
       )}
 
       {/* ═══ MAIN CONTENT: PÓDIO ═══ */}
-      <main className="relative z-10 md:flex-1 md:overflow-y-auto w-full flex justify-center">
-        {/* Desktop: overflow-x permitido para o layout horizontal do pódio */}
-        <div className="w-full max-w-[1600px] px-2 sm:px-6 lg:px-12 py-4 sm:py-6 md:overflow-x-auto md:h-full">
-          <div className="md:min-w-[900px] xl:min-w-[1200px] md:flex md:flex-col md:justify-end md:h-full" style={{ minHeight: '520px' }}>
+      <main className="relative z-10 flex-1 overflow-y-auto md:overflow-hidden w-full flex justify-center">
+        <div className="w-full max-w-[1600px] px-2 sm:px-6 lg:px-12 pt-4 sm:pt-6 pb-4 md:pb-0 h-full">
+          <div className="md:min-w-[900px] xl:min-w-[1200px] flex flex-col justify-end h-full">
             {rankingData.length > 0 ? (
               <Podium rankingData={rankingData} />
             ) : (
@@ -450,13 +557,6 @@ export default function App() {
           </div>
         </div>
       </main>
-
-      {/* ═══ FOOTER ═══ */}
-      <footer className="relative z-20 w-full py-4 flex items-center justify-center border-t border-white/[0.05] bg-[#06060a]">
-        <p className="text-xs text-gray-500 font-medium tracking-wide uppercase">
-          GYM RATS 2026 &bull; TDBUSINESS
-        </p>
-      </footer>
 
     </div>
   );
@@ -478,11 +578,11 @@ function StatCard({ icon: Icon, color, value, label }) {
 // ═══ COMPONENTE DE PÓDIO ═══
 function Podium({ rankingData }) {
   const positions = [
-    { rank: 4, height: '400px', place: '4º' },
-    { rank: 2, height: '450px', place: '2º' },
-    { rank: 1, height: '500px', place: '1º', isWinner: true },
-    { rank: 3, height: '450px', place: '3º' },
-    { rank: 5, height: '400px', place: '5º' },
+    { rank: 4, height: '78%', place: '4º' },
+    { rank: 2, height: '88%', place: '2º' },
+    { rank: 1, height: '100%', place: '1º', isWinner: true },
+    { rank: 3, height: '88%', place: '3º' },
+    { rank: 5, height: '78%', place: '5º' },
   ];
 
   // Garante que existam 5 posições, preenchendo com nulos se houver menos
@@ -530,7 +630,7 @@ function Podium({ rankingData }) {
       <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-blue-500/15 rounded-full blur-[100px] pointer-events-none z-0" />
 
       {/* ── DESKTOP: layout horizontal em coluna de arena ── */}
-      <div className="hidden md:flex items-end justify-center gap-1.5 sm:gap-2 md:gap-3 lg:gap-5 w-full px-2 sm:px-6 z-10 relative">
+      <div className="hidden md:flex items-end justify-center gap-1.5 sm:gap-2 md:gap-3 lg:gap-5 w-full h-full px-2 sm:px-6 z-10 relative">
         {podiumRender.map((item, idx) => {
           if (!item.team) return <div key={idx} className="w-[20%] min-w-0" />;
           return <PodiumTeamCard key={idx} config={item} team={item.team} isMobile={false} />;
@@ -545,20 +645,6 @@ function Podium({ rankingData }) {
         })}
       </div>
 
-      {/* BARRA BASE DO PÓDIO — somente desktop */}
-      <div className="hidden md:block w-full relative z-20 mt-[-2px]">
-        <div className="w-full h-[2px] bg-gradient-to-r from-transparent via-blue-500/50 to-transparent shadow-[0_0_15px_rgba(59,130,246,0.6)]" />
-        <div 
-          className="w-full h-8 sm:h-12 rounded-b-2xl sm:rounded-b-[32px] border border-white/[0.05] border-t-0 shadow-[0_30px_60px_rgba(0,0,0,0.95)] overflow-hidden"
-          style={{
-            background: 'linear-gradient(to bottom, rgba(20,20,30,0.9) 0%, rgba(10,10,15,0.95) 100%)',
-            backdropFilter: 'blur(20px)'
-          }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent" />
-          <div className="absolute top-0 w-full h-1/2 bg-gradient-to-b from-white/[0.04] to-transparent" />
-        </div>
-      </div>
     </div>
   );
 }
@@ -568,13 +654,13 @@ function PodiumTeamCard({ config, team, isMobile }) {
     <div
       className={isMobile
         ? "w-full flex flex-col relative z-10 rounded-2xl"
-        : "w-[20%] min-w-0 flex flex-col relative z-10"
+        : "w-[20%] min-w-0 flex flex-col relative z-10 overflow-hidden"
       }
       style={isMobile ? {} : { height: config.height }}
     >
       {/* BACKGROUND COM EFEITO DE VIDRO */}
       <div 
-        className={isMobile ? "absolute inset-0 rounded-2xl pointer-events-none -z-10" : "absolute inset-0 rounded-t-3xl pointer-events-none -z-10"}
+        className={isMobile ? "absolute inset-0 rounded-2xl pointer-events-none -z-10" : "absolute inset-0 rounded-3xl pointer-events-none -z-10"}
         style={{
           background: 'rgba(14,14,22,0.85)',
           backdropFilter: 'blur(16px)',
@@ -662,39 +748,40 @@ function PodiumTeamCard({ config, team, isMobile }) {
 
       {/* LISTA DE MEMBROS */}
       <div
-        className={isMobile ? "px-2 py-2" : "flex-1 overflow-y-auto px-1 sm:px-2 py-2"}
+        className={isMobile ? "px-2 py-2" : "flex-1 min-h-0 overflow-hidden px-1 sm:px-2 py-2"}
         style={isMobile ? {} : { scrollbarWidth: 'thin', scrollbarColor: `${config.accentColor}30 transparent` }}
       >
         <div className={`flex flex-col mt-2 ${config.rank >= 4 ? 'gap-0.5' : 'gap-1.5'}`}>
           {team.members.map((m, i) => (
-            <div
-              key={i}
-              className={`flex items-center justify-between px-3 rounded-lg transition-all duration-200 cursor-default ${config.rank >= 4 ? 'py-1' : 'py-2'}`}
-              style={{ background: 'transparent' }}
-              onMouseEnter={e => e.currentTarget.style.background = `${config.accentColor}12`}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-            >
-              <div className="flex items-center gap-2 truncate">
-                <span
-                  className="font-mono text-[11px] font-bold w-4 text-right shrink-0"
-                  style={{ color: `${config.accentColor}88` }}
-                >
-                  {i + 1}.
-                </span>
-                <span className="font-semibold text-gray-200 text-[13px] truncate">
-                  {m.formattedName}
-                </span>
-                {m.extraPoints && m.extraPoints !== "0" && (
-                  <span className="ml-1.5 text-[10px] font-black text-emerald-400 shrink-0">
-                    +{m.extraPoints}
+            <MemberTooltip key={i} member={m} accentColor={config.accentColor}>
+              <div
+                className={`flex items-center justify-between px-3 rounded-lg transition-all duration-200 cursor-default ${config.rank >= 4 ? 'py-1' : 'py-2'}`}
+                style={{ background: 'transparent' }}
+                onMouseEnter={e => e.currentTarget.style.background = `${config.accentColor}12`}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <div className="flex items-center gap-2 truncate">
+                  <span
+                    className="font-mono text-[11px] font-bold w-4 text-right shrink-0"
+                    style={{ color: `${config.accentColor}88` }}
+                  >
+                    {i + 1}.
                   </span>
-                )}
+                  <span className="font-semibold text-gray-200 text-[13px] truncate">
+                    {m.formattedName}
+                  </span>
+                  {m.extraPoints && m.extraPoints !== "0" && (
+                    <span className="ml-1.5 text-[10px] font-black text-emerald-400 shrink-0">
+                      +{m.extraPoints}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-baseline gap-0.5 w-[36px] justify-end">
+                  <span className="font-bold text-[14px]" style={{ color: config.accentColor }}>{m.points}</span>
+                  <span className="text-[9px] text-gray-600 font-bold">pts</span>
+                </div>
               </div>
-              <div className="flex items-baseline gap-0.5 w-[36px] justify-end">
-                <span className="font-bold text-[14px]" style={{ color: config.accentColor }}>{m.points}</span>
-                <span className="text-[9px] text-gray-600 font-bold">pts</span>
-              </div>
-            </div>
+            </MemberTooltip>
           ))}
         </div>
       </div>
