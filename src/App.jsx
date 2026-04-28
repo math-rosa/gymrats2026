@@ -114,7 +114,7 @@ function MediaItem({ url }) {
   );
 }
 // ═══ TOOLTIP DO MEMBRO ═══
-function MemberTooltip({ member, accentColor, children }) {
+function MemberTooltip({ member, accentColor, children, style }) {
   const [show, setShow] = useState(false);
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const triggerRef = useRef(null);
@@ -143,6 +143,7 @@ function MemberTooltip({ member, accentColor, children }) {
         ref={triggerRef}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={() => setShow(false)}
+        style={style}
       >
         {children}
       </div>
@@ -328,8 +329,8 @@ export default function App() {
         const media = jsonData
           .map(item => item.thumbnail_url || item.url)
           .filter(url => url && url.length > 5)
-          .reverse() // Pegar os mais recentes (do fim da planilha)
-          .slice(0, 15); // Limitar a 15 itens no DOM
+          .sort(() => Math.random() - 0.5) // Embaralhar os itens
+          .slice(0, 15); // Limitar a 15 itens aleatórios no DOM
         setFeedData(media);
       })
       .catch(err => console.warn("Erro ao carregar feed:", err));
@@ -650,6 +651,34 @@ function Podium({ rankingData }) {
 }
 
 function PodiumTeamCard({ config, team, isMobile }) {
+  const listRef = useRef(null);
+  const [dynamicStyles, setDynamicStyles] = useState(null);
+
+  useEffect(() => {
+    if (isMobile || !listRef.current) return;
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const availableHeight = entry.contentRect.height;
+        const memberCount = team.members.length || 1;
+        // Each row gets an equal share of the full available height
+        const rowHeight = Math.max(16, availableHeight / memberCount);
+        // Dynamic font: scale between 9px and 14px based on row height
+        const fontSize = Math.min(14, Math.max(9, rowHeight * 0.45));
+        const pointsFontSize = Math.min(15, Math.max(10, rowHeight * 0.48));
+        const paddingY = Math.max(0, (rowHeight - fontSize - 2) / 2);
+        const gap = Math.max(0, Math.min(4, (rowHeight - fontSize) * 0.15));
+
+        setDynamicStyles({ fontSize, pointsFontSize, paddingY, gap });
+      }
+    });
+
+    observer.observe(listRef.current);
+    return () => observer.disconnect();
+  }, [isMobile, team.members.length]);
+
+  const ds = dynamicStyles || { fontSize: 13, pointsFontSize: 14, paddingY: 6, gap: config.rank >= 4 ? 0.5 : 4 };
+
   return (
     <div
       className={isMobile
@@ -746,39 +775,60 @@ function PodiumTeamCard({ config, team, isMobile }) {
         </div>
       </div>
 
-      {/* LISTA DE MEMBROS */}
+      {/* LISTA DE MEMBROS — responsiva internamente */}
       <div
-        className={isMobile ? "px-2 py-2" : "flex-1 min-h-0 overflow-hidden px-1 sm:px-2 py-2"}
-        style={isMobile ? {} : { scrollbarWidth: 'thin', scrollbarColor: `${config.accentColor}30 transparent` }}
+        ref={listRef}
+        className={isMobile ? "px-2 py-2" : "flex-1 min-h-0 overflow-hidden px-1 sm:px-2"}
       >
-        <div className={`flex flex-col mt-2 ${config.rank >= 4 ? 'gap-0.5' : 'gap-1.5'}`}>
+        <div
+          className={isMobile ? "flex flex-col gap-1.5" : "flex flex-col h-full"}
+        >
           {team.members.map((m, i) => (
-            <MemberTooltip key={i} member={m} accentColor={config.accentColor}>
+            <MemberTooltip key={i} member={m} accentColor={config.accentColor} style={isMobile ? {} : { flex: '1 1 0', minHeight: 0 }}>
               <div
-                className={`flex items-center justify-between px-3 rounded-lg transition-all duration-200 cursor-default ${config.rank >= 4 ? 'py-1' : 'py-2'}`}
+                className={isMobile
+                  ? "flex items-center justify-between px-3 py-1.5 rounded-lg"
+                  : "flex items-center justify-between px-3 rounded-lg transition-all duration-200 cursor-default h-full"
+                }
                 style={{ background: 'transparent' }}
                 onMouseEnter={e => e.currentTarget.style.background = `${config.accentColor}12`}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
                 <div className="flex items-center gap-2 truncate">
                   <span
-                    className="font-mono text-[11px] font-bold w-4 text-right shrink-0"
-                    style={{ color: `${config.accentColor}88` }}
+                    className="font-mono font-bold w-4 text-right shrink-0"
+                    style={{ color: `${config.accentColor}88`, fontSize: isMobile ? 11 : `${Math.max(9, ds.fontSize * 0.8)}px` }}
                   >
                     {i + 1}.
                   </span>
-                  <span className="font-semibold text-gray-200 text-[13px] truncate">
+                  <span
+                    className="font-semibold text-gray-200 truncate"
+                    style={{ fontSize: isMobile ? 13 : `${ds.fontSize}px` }}
+                  >
                     {m.formattedName}
                   </span>
                   {m.extraPoints && m.extraPoints !== "0" && (
-                    <span className="ml-1.5 text-[10px] font-black text-emerald-400 shrink-0">
+                    <span
+                      className="ml-1.5 font-black text-emerald-400 shrink-0"
+                      style={{ fontSize: isMobile ? 10 : `${Math.max(8, ds.fontSize * 0.75)}px` }}
+                    >
                       +{m.extraPoints}
                     </span>
                   )}
                 </div>
-                <div className="flex items-baseline gap-0.5 w-[36px] justify-end">
-                  <span className="font-bold text-[14px]" style={{ color: config.accentColor }}>{m.points}</span>
-                  <span className="text-[9px] text-gray-600 font-bold">pts</span>
+                <div className="flex items-baseline gap-0.5 shrink-0 justify-end" style={{ minWidth: 36 }}>
+                  <span
+                    className="font-bold"
+                    style={{ color: config.accentColor, fontSize: isMobile ? 14 : `${ds.pointsFontSize}px` }}
+                  >
+                    {m.points}
+                  </span>
+                  <span
+                    className="text-gray-600 font-bold"
+                    style={{ fontSize: isMobile ? 9 : `${Math.max(7, ds.fontSize * 0.65)}px` }}
+                  >
+                    pts
+                  </span>
                 </div>
               </div>
             </MemberTooltip>
