@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import ReactDOM from 'react-dom';
-import { Loader2, AlertCircle, Trophy, Users, Route, Instagram, Timer, Crown } from 'lucide-react';
+import { Loader2, AlertCircle, Trophy, Users, Route, Instagram, Timer, Crown, Clock } from 'lucide-react';
 import TD_LOGO_URL from './tdbusiness_logo.jpg';
 
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3nqk-0k8VUtIgaR77357dukIvWCBwRs8wY4wIju32ricmg3LIEGyGMlhruMtGBJEE3CeEm8nr6PJO/pub?gid=196084497&single=true&output=csv";
@@ -348,32 +348,31 @@ export default function App() {
 
 
   // Novo Cálculo do Ranking e Totais (Times)
-  const { rankingData, totalKm } = useMemo(() => {
-    if (!data || data.length === 0) return { rankingData: [], totalKm: 0 };
+  const { rankingData, totalKm, totalMembers, lastUpdate } = useMemo(() => {
+    if (!data || data.length === 0) return { rankingData: [], totalKm: 0, totalMembers: 0, lastUpdate: "" };
     
     const scores = {};
     let globalKm = 0;
+    let updateTime = "";
     
     data.forEach(item => {
       const teamName = item['TIME']?.trim();
       const memberName = item['NOME']?.trim();
-      // const avatar = item['AVATAR']?.trim();
-      const rawPoints = item['CHECK-IN'] || "0";
+      if (item['DATA'] && !updateTime) updateTime = item['DATA'];
       
       // Ignorar linhas de totalização ou vazias
       if (!teamName || teamName.toUpperCase() === 'TOTAL' || !memberName || memberName.toUpperCase() === 'TOTAL') {
         return;
       }
-
+      // ... (rest of logic remains same)
+      const rawPoints = item['CHECK-IN'] || "0";
       const points = parseFloat(rawPoints.toString().replace(',', '.')) || 0;
       const rawKm = item['KM'] || "0";
       const km = parseFloat(rawKm.toString().replace(',', '.')) || 0;
 
       globalKm += km;
-
       const extraPoints = item['PTS EXTRAS'] || "0";
 
-      // Dados semanais para tooltip
       const weeks = {
         s1: item['SEMANA 1'] || '0',
         s2: item['SEMANA 2'] || '0',
@@ -410,7 +409,6 @@ export default function App() {
 
     const sortedList = Object.values(scores)
       .map(team => {
-        // Ordenar os membros de cada time por pontos decrescente
         team.members.sort((a, b) => b.points - a.points);
         return team;
       })
@@ -424,7 +422,14 @@ export default function App() {
       sortedList[i].rank = currentRank;
     }
 
-    return { rankingData: sortedList, totalKm: Math.round(globalKm) };
+    const totalMembersCount = sortedList.reduce((sum, t) => sum + t.members.length, 0);
+
+    return { 
+      rankingData: sortedList, 
+      totalKm: Math.round(globalKm), 
+      totalMembers: totalMembersCount,
+      lastUpdate: updateTime 
+    };
   }, [data]);
 
   if (loading) {
@@ -492,8 +497,16 @@ export default function App() {
                 <h1 className="text-lg sm:text-2xl font-black text-white tracking-tight italic uppercase">
                   GYM RATS <span className="text-blue-500">2026.2</span>
                 </h1>
-                <p className="text-[10px] sm:text-xs text-gray-500 font-semibold uppercase tracking-widest flex items-center gap-1.5">
+                <p className="text-[10px] sm:text-xs text-gray-500 font-semibold uppercase tracking-widest flex items-center gap-1.5 flex-wrap">
                   <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> {rankingData.length} Equipes
+                  <span className="opacity-30">•</span>
+                  {totalMembers} Participantes
+                  {lastUpdate && (
+                    <>
+                      <span className="opacity-30">•</span>
+                      <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> {lastUpdate}
+                    </>
+                  )}
                 </p>
               </div>
             </div>
@@ -633,7 +646,7 @@ function Podium({ rankingData }) {
       <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-blue-500/15 rounded-full blur-[100px] pointer-events-none z-0" />
 
       {/* ── DESKTOP: layout horizontal em coluna de arena ── */}
-      <div className="hidden md:flex items-end justify-center gap-1.5 sm:gap-2 md:gap-3 lg:gap-5 w-full h-full px-2 sm:px-6 z-10 relative">
+      <div className="hidden md:flex items-end justify-center gap-1.5 sm:gap-2 md:gap-3 lg:gap-5 w-full h-full px-2 sm:px-6 pt-6 z-10 relative">
         {podiumRender.map((item, idx) => {
           if (!item.team) return <div key={idx} className="w-[20%] min-w-0" />;
           return <PodiumTeamCard key={idx} config={item} team={item.team} isMobile={false} />;
@@ -685,7 +698,7 @@ function PodiumTeamCard({ config, team, isMobile }) {
     <div
       className={isMobile
         ? "w-full flex flex-col relative z-10 rounded-t-2xl"
-        : "w-[20%] min-w-0 flex flex-col relative z-10 overflow-hidden"
+        : "w-[20%] min-w-0 flex flex-col relative z-20 overflow-visible"
       }
       style={isMobile ? {} : { height: config.height }}
     >
