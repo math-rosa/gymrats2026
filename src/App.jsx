@@ -682,21 +682,21 @@ function PodiumTeamCard({ config, team, isMobile }) {
   return (
     <div
       className={isMobile
-        ? "w-full flex flex-col relative z-10 rounded-2xl"
+        ? "w-full flex flex-col relative z-10 rounded-t-2xl"
         : "w-[20%] min-w-0 flex flex-col relative z-10 overflow-hidden"
       }
       style={isMobile ? {} : { height: config.height }}
     >
       {/* BACKGROUND COM EFEITO DE VIDRO */}
       <div 
-        className={isMobile ? "absolute inset-0 rounded-2xl pointer-events-none -z-10" : "absolute inset-0 rounded-3xl pointer-events-none -z-10"}
+        className={isMobile ? "absolute inset-0 rounded-t-2xl pointer-events-none -z-10" : "absolute inset-0 rounded-t-3xl pointer-events-none -z-10"}
         style={{
           background: 'rgba(14,14,22,0.85)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           border: `1px solid ${config.accentColor}40`,
           borderTop: `4px solid ${config.accentColor}`,
-          borderBottom: isMobile ? `1px solid ${config.accentColor}30` : 'none',
+          borderBottom: 'none',
           boxShadow: `0 0 40px ${config.glowColor}, 0 20px 40px rgba(0,0,0,0.5)`,
         }}
       />
@@ -777,10 +777,9 @@ function PodiumTeamCard({ config, team, isMobile }) {
         </div>
       </div>
 
-      {/* LISTA DE MEMBROS — responsiva internamente */}
       <div
         ref={listRef}
-        className={isMobile ? "px-2 py-2" : "flex-1 min-h-0 overflow-hidden px-1 sm:px-2"}
+        className={isMobile ? "px-2 py-2" : "flex-1 min-h-0 overflow-hidden px-1 sm:px-2 pb-3"}
       >
         <div
           className={isMobile ? "flex flex-col gap-1.5" : "flex flex-col h-full"}
