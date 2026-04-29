@@ -12,7 +12,9 @@ const CHALLENGE_END = new Date('2026-05-29T23:59:59');
 // --- Utilitários ---
 const toTitleCase = (str) => {
   if (!str) return "";
-  return str.toLowerCase().split(' ').map(word => {
+  const words = str.toLowerCase().split(' ').filter(w => w.length > 0);
+  // Limitar a no máximo 2 nomes (ex: Primeiro e Segundo nome)
+  return words.slice(0, 2).map(word => {
     return word.charAt(0).toUpperCase() + word.slice(1);
   }).join(' ');
 };
