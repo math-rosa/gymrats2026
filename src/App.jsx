@@ -211,6 +211,107 @@ function MemberTooltip({ member, accentColor, children, style }) {
   );
 }
 
+// ═══ TOOLTIP DO TIME ═══
+function TeamTooltip({ team, accentColor, children, style }) {
+  const [show, setShow] = useState(false);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const triggerRef = useRef(null);
+
+  const handleMouseEnter = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setPos({ x: rect.left + rect.width / 2, y: rect.top });
+    }
+    setShow(true);
+  };
+
+  const d = team.details || {};
+  const stats = [
+    { label: 'Sem 1', value: d.s1 },
+    { label: 'Sem 2', value: d.s2 },
+    { label: 'Sem 3', value: d.s3 },
+    { label: 'Sem 4', value: d.s4 },
+    { label: 'Sem 5', value: d.s5 },
+    { label: 'Sem 6', value: d.s6 },
+    { label: 'D1 - 100km', value: d.d1 },
+    { label: 'D2 - Conv.', value: d.d2 },
+    { label: 'D3 - Equipe', value: d.d3 },
+    { label: 'D4 - Mãe', value: d.d4 },
+    { label: 'D. Relâm.', value: d.dr },
+  ];
+
+  return (
+    <>
+      <div
+        ref={triggerRef}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={() => setShow(false)}
+        style={style}
+        className="w-full flex justify-center"
+      >
+        {children}
+      </div>
+      {show && ReactDOM.createPortal(
+        <div
+          className="fixed z-[9999] pointer-events-none"
+          style={{
+            left: pos.x,
+            top: pos.y,
+            transform: 'translate(-50%, -100%)',
+          }}
+        >
+          <div
+            className="relative mb-2 px-4 py-3 rounded-xl border shadow-2xl min-w-[280px]"
+            style={{
+              background: 'rgba(12,12,20,0.95)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              borderColor: `${accentColor}50`,
+              boxShadow: `0 0 30px ${accentColor}20, 0 20px 40px rgba(0,0,0,0.6)`,
+            }}
+          >
+            {/* Header */}
+            <div className="flex items-center gap-2 mb-2.5 pb-2 border-b border-white/[0.08]">
+              <div className="w-1.5 h-1.5 rounded-full" style={{ background: accentColor }} />
+              <span className="font-bold text-white text-[13px] uppercase tracking-wider truncate">DETALHES - {team.name}</span>
+            </div>
+
+            {/* Grid de Estatísticas */}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+              {stats.map((s, idx) => (
+                <div key={idx} className="flex items-baseline justify-between gap-2">
+                  <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold truncate" title={s.label}>{s.label}</span>
+                  <span className="text-[12px] font-black" style={{ color: (s.value && s.value !== '0' && s.value !== '') ? accentColor : '#4B5563' }}>
+                    {s.value || '0'}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Totais */}
+            <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-white/[0.08]">
+              {d.ptsExtras && d.ptsExtras !== '0' && (
+                <div className="flex items-baseline gap-1">
+                  <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold">Pts Extras</span>
+                  <span className="text-[12px] font-black text-emerald-400">+{d.ptsExtras}</span>
+                </div>
+              )}
+              <div className="flex items-baseline gap-1 ml-auto">
+                <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold">Check-in</span>
+                <span className="text-[14px] font-black" style={{ color: accentColor }}>{team.total}</span>
+              </div>
+            </div>
+
+            {/* Seta */}
+            <div className="absolute left-1/2 -translate-x-1/2 -bottom-[6px] w-3 h-3 rotate-45" style={{ background: 'rgba(12,12,20,0.95)', borderRight: `1px solid ${accentColor}50`, borderBottom: `1px solid ${accentColor}50` }} />
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
+  );
+}
+
 // ═══ COMPONENTE DE NÚMERO ANIMADO ═══
 function AnimatedNumber({ value, isFloat = false }) {
   const [current, setCurrent] = useState(0);
@@ -356,15 +457,48 @@ export default function App() {
     let updateTime = "";
     
     data.forEach(item => {
-      const teamName = item['TIME']?.trim();
+      const teamCol = item['TIME']?.trim();
       const memberName = item['NOME']?.trim();
       if (item['DATA'] && !updateTime) updateTime = item['DATA'];
+
+      if (!teamCol) return;
+
+      const teamColUpper = teamCol.toUpperCase();
+      const isTotalRow = teamColUpper.startsWith('TOTAL ');
       
-      // Ignorar linhas de totalização ou vazias
-      if (!teamName || teamName.toUpperCase() === 'TOTAL' || !memberName || memberName.toUpperCase() === 'TOTAL') {
+      const teamKey = isTotalRow ? teamColUpper.replace('TOTAL ', '').trim() : teamColUpper;
+      const displayTeamName = isTotalRow ? teamKey : teamCol;
+
+      if (!scores[teamKey]) {
+        scores[teamKey] = { id: teamKey, name: displayTeamName, members: [], total: 0, totalKm: 0 };
+      } else if (!isTotalRow) {
+        scores[teamKey].name = displayTeamName;
+      }
+
+      if (isTotalRow) {
+        const rawPoints = item['CHECK-IN'] || "0";
+        scores[teamKey].total = parseFloat(rawPoints.toString().replace(',', '.')) || 0;
+        scores[teamKey].details = {
+          s1: item['SEMANA 1']?.trim() || '0',
+          s2: item['SEMANA 2']?.trim() || '0',
+          s3: item['SEMANA 3']?.trim() || '0',
+          s4: item['SEMANA 4']?.trim() || '0',
+          s5: item['SEMANA 5']?.trim() || '0',
+          s6: item['SEMANA 6']?.trim() || '0',
+          d1: item['DESAFIO 1 - 100KM']?.trim() || '0',
+          d2: item['DESAFIO 2 - CONVIDADO']?.trim() || '0',
+          d3: item['DESAFIO 3 - TREINO EM EQUIPE']?.trim() || '0',
+          d4: item['DESAFIO 4 - MÃE']?.trim() || '0',
+          dr: item['DESAFIO RELAMPAGO - POSE']?.trim() || '0',
+          ptsExtras: item['PTS EXTRAS']?.trim() || '0'
+        };
         return;
       }
-      // ... (rest of logic remains same)
+
+      if (!memberName || memberName.toUpperCase() === 'TOTAL') {
+        return;
+      }
+
       const rawPoints = item['CHECK-IN'] || "0";
       const points = parseFloat(rawPoints.toString().replace(',', '.')) || 0;
       const rawKm = item['KM'] || "0";
@@ -382,21 +516,16 @@ export default function App() {
         s6: item['SEMANA 6'] || '0',
       };
 
-      if (!scores[teamName]) {
-        scores[teamName] = { id: teamName, name: teamName, members: [], total: 0, totalKm: 0 };
-      }
-
-      scores[teamName].total += points;
-      scores[teamName].totalKm += km;
+      scores[teamKey].totalKm += km;
       
-      let existingMember = scores[teamName].members.find(m => m.name === memberName);
+      let existingMember = scores[teamKey].members.find(m => m.name === memberName);
       if (existingMember) {
         existingMember.points += points;
         existingMember.km += km;
         if (extraPoints !== "0") existingMember.extraPoints = extraPoints;
         existingMember.weeks = weeks;
       } else {
-        scores[teamName].members.push({
+        scores[teamKey].members.push({
           name: memberName,
           formattedName: toTitleCase(memberName),
           points: points,
@@ -769,26 +898,24 @@ function PodiumTeamCard({ config, team, isMobile }) {
         </div>
 
         <div className="flex items-center justify-center w-full">
-          {/* Badge Pontos com Fórmula */}
-          <div
-            className="px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5"
-            style={{
-              background: `${config.accentColor}1a`,
-              border: `1px solid ${config.accentColor}40`,
-              color: config.accentColor,
-            }}
-          >
-            <span className="text-[13px] leading-none font-black"><AnimatedNumber value={team.total} /></span>
-            <span className="text-[11px] opacity-70 font-bold">+</span>
-            <span className="text-[11px] font-black text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]">15</span>
-            <span className="text-[11px] opacity-70 font-bold">=</span>
-            <div className="flex items-baseline gap-0.5 ml-0.5">
-              <span className="text-[14px] leading-none font-black text-white">
-                <AnimatedNumber value={team.total + 15} />
-              </span>
-              <span className="text-[9px] uppercase tracking-widest opacity-60 text-white">pts</span>
+          {/* Badge Pontos com Tooltip */}
+          <TeamTooltip team={team} accentColor={config.accentColor}>
+            <div
+              className="px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-help"
+              style={{
+                background: `${config.accentColor}1a`,
+                border: `1px solid ${config.accentColor}40`,
+                color: config.accentColor,
+              }}
+            >
+              <div className="flex items-baseline gap-0.5 ml-0.5">
+                <span className="text-[14px] leading-none font-black text-white">
+                  <AnimatedNumber value={team.total} />
+                </span>
+                <span className="text-[9px] uppercase tracking-widest opacity-60 text-white">pts</span>
+              </div>
             </div>
-          </div>
+          </TeamTooltip>
         </div>
       </div>
 
