@@ -226,19 +226,25 @@ function TeamTooltip({ team, accentColor, children, style }) {
   };
 
   const d = team.details || {};
-  const stats = [
+  const weeksStats = [
     { label: 'Sem 1', value: d.s1 },
     { label: 'Sem 2', value: d.s2 },
     { label: 'Sem 3', value: d.s3 },
     { label: 'Sem 4', value: d.s4 },
     { label: 'Sem 5', value: d.s5 },
     { label: 'Sem 6', value: d.s6 },
+  ];
+  
+  const challengesStats = [
     { label: 'D1 - 100km', value: d.d1 },
     { label: 'D2 - Conv.', value: d.d2 },
     { label: 'D3 - Equipe', value: d.d3 },
     { label: 'D4 - Mãe', value: d.d4 },
     { label: 'D. Relâm.', value: d.dr },
   ];
+
+  const sumWeeks = weeksStats.reduce((acc, curr) => acc + (parseFloat(curr.value?.toString().replace(',', '.')) || 0), 0);
+  const sumChallenges = challengesStats.reduce((acc, curr) => acc + (parseFloat(curr.value?.toString().replace(',', '.')) || 0), 0);
 
   return (
     <>
@@ -261,7 +267,7 @@ function TeamTooltip({ team, accentColor, children, style }) {
           }}
         >
           <div
-            className="relative mb-2 px-4 py-3 rounded-xl border shadow-2xl min-w-[280px]"
+            className="relative mb-2 px-4 py-3 rounded-xl border shadow-2xl min-w-[300px]"
             style={{
               background: 'rgba(12,12,20,0.95)',
               backdropFilter: 'blur(20px)',
@@ -277,28 +283,52 @@ function TeamTooltip({ team, accentColor, children, style }) {
             </div>
 
             {/* Grid de Estatísticas */}
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-              {stats.map((s, idx) => (
-                <div key={idx} className="flex items-baseline justify-between gap-2">
-                  <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold truncate" title={s.label}>{s.label}</span>
-                  <span className="text-[12px] font-black" style={{ color: (s.value && s.value !== '0' && s.value !== '') ? accentColor : '#4B5563' }}>
-                    {s.value || '0'}
-                  </span>
-                </div>
-              ))}
+            <div className="flex gap-x-6">
+              {/* Coluna Esquerda: Semanas */}
+              <div className="flex flex-col gap-y-1.5 flex-1">
+                {weeksStats.map((s, idx) => (
+                  <div key={idx} className="flex items-baseline justify-between gap-2">
+                    <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold truncate" title={s.label}>{s.label}</span>
+                    <span className="text-[12px] font-black" style={{ color: (s.value && s.value !== '0' && s.value !== '') ? accentColor : '#4B5563' }}>
+                      {s.value || '0'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Coluna Direita: Desafios */}
+              <div className="flex flex-col gap-y-1.5 flex-1">
+                {challengesStats.map((s, idx) => (
+                  <div key={idx} className="flex items-baseline justify-between gap-2">
+                    <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold truncate" title={s.label}>{s.label}</span>
+                    <span className="text-[12px] font-black" style={{ color: (s.value && s.value !== '0' && s.value !== '') ? accentColor : '#4B5563' }}>
+                      {s.value || '0'}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Totais */}
-            <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-white/[0.08]">
-              {d.ptsExtras && d.ptsExtras !== '0' && (
-                <div className="flex items-baseline gap-1">
-                  <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold">Pts Extras</span>
-                  <span className="text-[12px] font-black text-emerald-400">+{d.ptsExtras}</span>
+            <div className="mt-2.5 pt-2 border-t border-white/[0.08] flex flex-col gap-2.5">
+              {/* Linha 1: Subtotais */}
+              <div className="flex gap-x-6">
+                <div className="flex items-baseline justify-between gap-2 flex-1">
+                  <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold">Total Semanas</span>
+                  <span className="text-[13px] font-black text-white">{sumWeeks}</span>
                 </div>
-              )}
-              <div className="flex items-baseline gap-1 ml-auto">
-                <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold">Check-in</span>
-                <span className="text-[14px] font-black" style={{ color: accentColor }}>{team.total}</span>
+                <div className="flex items-baseline justify-between gap-2 flex-1">
+                  <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold">Total Desafios</span>
+                  <span className="text-[13px] font-black text-white">{sumChallenges}</span>
+                </div>
+              </div>
+              
+              {/* Linha 2: Soma centralizada */}
+              <div className="flex items-center justify-center pt-2 border-t border-white/[0.04]">
+                <div className="flex items-baseline gap-1.5 bg-white/[0.03] px-4 py-1.5 rounded-lg border border-white/[0.05]">
+                  <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Check-in Final</span>
+                  <span className="text-[16px] font-black" style={{ color: accentColor }}>{team.total}</span>
+                </div>
               </div>
             </div>
 
