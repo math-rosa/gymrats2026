@@ -240,6 +240,7 @@ function TeamTooltip({ team, accentColor, children, style }) {
     { label: 'D2 - Conv.', value: d.d2 },
     { label: 'D3 - Equipe', value: d.d3 },
     { label: 'D4 - Mãe', value: d.d4 },
+    { label: 'D5 - Extra', value: d.d5 },
     { label: 'D. Relâm.', value: d.dr },
   ];
 
@@ -519,6 +520,7 @@ export default function App() {
           d2: item['DESAFIO 2 - CONVIDADO']?.trim() || '0',
           d3: item['DESAFIO 3 - TREINO EM EQUIPE']?.trim() || '0',
           d4: item['DESAFIO 4 - MÃE']?.trim() || '0',
+          d5: item['DESAFIO 5 - EXTRA']?.trim() || '0',
           dr: item['DESAFIO RELAMPAGO - POSE']?.trim() || '0',
           ptsExtras: item['PTS EXTRAS']?.trim() || '0'
         };
