@@ -1,8 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
-import { Crown } from 'lucide-react';
+import { Crown, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { AnimatedNumber } from './AnimatedNumber';
 import { MemberTooltip } from './MemberTooltip';
 import { TeamTooltip } from './TeamTooltip';
+
+const TrendIcon = ({ trend, size }) => {
+  if (!trend) return null;
+  const px = size || 10;
+  if (trend === 'up') return <TrendingUp className="text-emerald-400 shrink-0" style={{ width: px, height: px }} />;
+  if (trend === 'down') return <TrendingDown className="text-rose-400 shrink-0" style={{ width: px, height: px }} />;
+  return <Minus className="text-gray-500 shrink-0" style={{ width: px, height: px }} />;
+};
 
 export function PodiumTeamCard({ config, team, isMobile }) {
   const listRef = useRef(null);
@@ -104,19 +112,29 @@ export function PodiumTeamCard({ config, team, isMobile }) {
         <div className="flex items-center justify-center w-full">
           <TeamTooltip team={team} accentColor={config.accentColor}>
             <div
-              className="px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-help"
+              className="px-4 py-1.5 rounded-xl flex items-baseline gap-1.5 cursor-help"
               style={{
-                background: `${config.accentColor}1a`,
-                border: `1px solid ${config.accentColor}40`,
-                color: config.accentColor,
+                background: `linear-gradient(135deg, ${config.accentColor}26 0%, ${config.accentColor}0d 100%)`,
+                border: `1px solid ${config.accentColor}55`,
+                boxShadow: `0 0 24px ${config.accentColor}33, inset 0 1px 0 ${config.accentColor}22`,
               }}
             >
-              <div className="flex items-baseline gap-0.5 ml-0.5">
-                <span className="text-[14px] leading-none font-black text-white">
-                  <AnimatedNumber value={team.total} />
-                </span>
-                <span className="text-[9px] uppercase tracking-widest opacity-60 text-white">pts</span>
-              </div>
+              <span
+                className="leading-none font-black"
+                style={{
+                  fontSize: config.rank === 1 ? '30px' : '26px',
+                  color: '#FFFFFF',
+                  textShadow: `0 0 14px ${config.accentColor}cc, 0 0 4px ${config.accentColor}`,
+                }}
+              >
+                <AnimatedNumber value={team.total} />
+              </span>
+              <span
+                className="text-[10px] uppercase tracking-[0.2em] font-bold"
+                style={{ color: config.accentColor }}
+              >
+                pts
+              </span>
             </div>
           </TeamTooltip>
         </div>
@@ -153,6 +171,7 @@ export function PodiumTeamCard({ config, team, isMobile }) {
                   >
                     {m.formattedName}
                   </span>
+                  <TrendIcon trend={m.trend} size={isMobile ? 11 : Math.max(9, ds.fontSize * 0.85)} />
                   {m.extraPoints && m.extraPoints !== "0" && (
                     <span
                       className="ml-1.5 font-black text-emerald-400 shrink-0"

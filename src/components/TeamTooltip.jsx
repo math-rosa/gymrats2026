@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import ReactDOM from 'react-dom';
+import { Sparkline } from './Sparkline';
 
 export function TeamTooltip({ team, accentColor, children, style }) {
   const [show, setShow] = useState(false);
@@ -94,6 +95,15 @@ export function TeamTooltip({ team, accentColor, children, style }) {
                 ))}
               </div>
             </div>
+
+            {team.weeklySeries && team.weeklySeries.some(v => v > 0) && (
+              <div className="mt-3 pt-2 border-t border-white/[0.08]">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold">Evolu&ccedil;&atilde;o Semanal</span>
+                </div>
+                <Sparkline data={team.weeklySeries} color={accentColor} />
+              </div>
+            )}
 
             <div className="mt-2.5 pt-2 border-t border-white/[0.08] flex flex-col gap-2.5">
               <div className="flex gap-x-6">

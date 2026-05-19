@@ -6,6 +6,28 @@ export const toTitleCase = (str) => {
   }).join(' ');
 };
 
+const parseWeekValue = (v) => parseFloat(v?.toString().replace(',', '.')) || 0;
+
+const WEEK_KEYS = ['s1', 's2', 's3', 's4', 's5', 's6'];
+
+const findCurrentWeekIdx = (details) => {
+  if (!details) return 0;
+  for (let i = WEEK_KEYS.length - 1; i >= 0; i--) {
+    if (parseWeekValue(details[WEEK_KEYS[i]]) > 0) return i + 1;
+  }
+  return 0;
+};
+
+const computeMemberTrend = (weeks, currentWeekIdx) => {
+  if (!weeks || currentWeekIdx < 2) return null;
+  const curr = parseWeekValue(weeks[`s${currentWeekIdx}`]);
+  const prev = parseWeekValue(weeks[`s${currentWeekIdx - 1}`]);
+  if (curr === 0 && prev === 0) return null;
+  if (curr > prev) return 'up';
+  if (curr < prev) return 'down';
+  return 'flat';
+};
+
 export const computeRanking = (data) => {
   if (!data || data.length === 0) {
     return { rankingData: [], totalKm: 0, totalMembers: 0, lastUpdate: "" };
@@ -100,6 +122,12 @@ export const computeRanking = (data) => {
 
   const sortedList = Object.values(scores)
     .map(team => {
+      const currentWeekIdx = findCurrentWeekIdx(team.details);
+      team.currentWeekIdx = currentWeekIdx;
+      team.weeklySeries = WEEK_KEYS.map(k => parseWeekValue(team.details?.[k]));
+      team.members.forEach(m => {
+        m.trend = computeMemberTrend(m.weeks, currentWeekIdx);
+      });
       team.members.sort((a, b) => b.points - a.points);
       return team;
     })

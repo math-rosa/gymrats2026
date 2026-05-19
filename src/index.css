@@ -160,3 +160,26 @@ body {
 .animate-levitate {
   animation: levitate 6s ease-in-out infinite;
 }
+
+/* Accessibility: respeitar usuários com motion sensitivity */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-scroll,
+  .animate-float,
+  .animate-levitate,
+  .animate-divider,
+  .animate-tick,
+  .animate-pulse,
+  .animate-ping,
+  .shimmer-overlay::after {
+    animation: none !important;
+  }
+}

@@ -21,6 +21,12 @@ export default function App() {
     [data]
   );
 
+  const tvMode = useMemo(
+    () => typeof window !== 'undefined' &&
+      new URLSearchParams(window.location.search).get('tv') === '1',
+    []
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
@@ -81,17 +87,19 @@ export default function App() {
                 <h1 className="text-lg sm:text-2xl font-black text-white tracking-tight italic uppercase">
                   GYM RATS <span className="text-blue-500">2026.2</span>
                 </h1>
-                <p className="text-[10px] sm:text-xs text-gray-500 font-semibold uppercase tracking-widest flex items-center gap-1.5 flex-wrap">
-                  <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> {rankingData.length} Equipes
-                  <span className="opacity-30">•</span>
-                  {totalMembers} Participantes
-                  {lastUpdate && (
-                    <>
-                      <span className="opacity-30">•</span>
-                      <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> {lastUpdate}
-                    </>
-                  )}
-                </p>
+                {!tvMode && (
+                  <p className="text-[10px] sm:text-xs text-gray-500 font-semibold uppercase tracking-widest flex items-center gap-1.5 flex-wrap">
+                    <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> {rankingData.length} Equipes
+                    <span className="opacity-30">•</span>
+                    {totalMembers} Participantes
+                    {lastUpdate && (
+                      <>
+                        <span className="opacity-30">•</span>
+                        <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> {lastUpdate}
+                      </>
+                    )}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -106,7 +114,7 @@ export default function App() {
         </div>
       </header>
 
-      <MediaFeed feedData={feedData} />
+      {!tvMode && <MediaFeed feedData={feedData} />}
 
       <main className="relative z-10 flex-1 overflow-y-auto md:overflow-hidden w-full flex justify-center">
         <div className="w-full max-w-[1600px] px-2 sm:px-6 lg:px-12 pt-4 sm:pt-6 pb-4 md:pb-0 md:h-full">

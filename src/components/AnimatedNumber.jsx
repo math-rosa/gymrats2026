@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
 
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' &&
+  window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
 export function AnimatedNumber({ value, isFloat = false }) {
   const [current, setCurrent] = useState(0);
 
@@ -10,6 +14,11 @@ export function AnimatedNumber({ value, isFloat = false }) {
 
     if (isNaN(endValue)) {
       setCurrent(value);
+      return;
+    }
+
+    if (prefersReducedMotion()) {
+      setCurrent(isFloat ? endValue.toFixed(1) : endValue);
       return;
     }
 
