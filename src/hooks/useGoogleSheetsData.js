@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
-import { parseCsvToJson } from '../lib/csv';
+import { parseCsvToJson, validateColumns } from '../lib/csv';
+
+const REQUIRED_RANKING_COLUMNS = ['TIME', 'NOME', 'CHECK-IN', 'KM'];
+const REQUIRED_FEED_COLUMNS = []; // feed aceita 'url' OU 'thumbnail_url'
 
 export function useGoogleSheetsData({ rankingUrl, feedUrl, refreshIntervalMs }) {
   const [data, setData] = useState([]);
@@ -20,15 +23,17 @@ export function useGoogleSheetsData({ rankingUrl, feedUrl, refreshIntervalMs }) 
       const fetchRanking = fetch(`${rankingUrl}&_t=${ts}`, fetchOpts)
         .then(r => { if (!r.ok) throw new Error("Erro Ranking"); return r.text(); })
         .then(text => {
-          const { data: jsonData } = parseCsvToJson(text);
+          const { data: jsonData, headers } = parseCsvToJson(text);
           if (jsonData.length === 0) throw new Error("CSV Ranking vazio.");
+          validateColumns(headers, REQUIRED_RANKING_COLUMNS, 'Ranking CSV');
           if (!cancelled) setData(jsonData);
         });
 
       const fetchFeed = fetch(`${feedUrl}&_t=${ts}`, fetchOpts)
         .then(r => { if (!r.ok) throw new Error("Erro Feed"); return r.text(); })
         .then(text => {
-          const { data: jsonData } = parseCsvToJson(text);
+          const { data: jsonData, headers } = parseCsvToJson(text);
+          validateColumns(headers, REQUIRED_FEED_COLUMNS, 'Feed CSV');
           const media = jsonData
             .map(item => item.thumbnail_url || item.url)
             .filter(url => url && url.length > 5)

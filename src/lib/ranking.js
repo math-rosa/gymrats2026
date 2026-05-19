@@ -78,7 +78,8 @@ export const computeRanking = (data) => {
 
     scores[teamKey].totalKm += km;
 
-    let existingMember = scores[teamKey].members.find(m => m.name === memberName);
+    const memberKey = memberName.toLowerCase();
+    let existingMember = scores[teamKey].members.find(m => m.memberKey === memberKey);
     if (existingMember) {
       existingMember.points += points;
       existingMember.km += km;
@@ -86,6 +87,7 @@ export const computeRanking = (data) => {
       existingMember.weeks = weeks;
     } else {
       scores[teamKey].members.push({
+        memberKey,
         name: memberName,
         formattedName: toTitleCase(memberName),
         points: points,

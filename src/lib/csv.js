@@ -13,3 +13,14 @@ export const parseCsvToJson = (text) => {
     headers: result.meta.fields || [],
   };
 };
+
+export const validateColumns = (headers, required, source = 'CSV') => {
+  const missing = required.filter((col) => !headers.includes(col));
+  if (missing.length > 0) {
+    console.warn(
+      `[${source}] Colunas obrigatorias ausentes: ${missing.join(', ')}. ` +
+      `Colunas encontradas: ${headers.join(', ')}`
+    );
+  }
+  return missing;
+};
