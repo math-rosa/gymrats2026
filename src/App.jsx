@@ -2,12 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { Loader2, AlertCircle, Trophy, Users, Route, Instagram, Timer, Crown, Clock } from 'lucide-react';
 import TD_LOGO_URL from './tdbusiness_logo.jpg';
-
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3nqk-0k8VUtIgaR77357dukIvWCBwRs8wY4wIju32ricmg3LIEGyGMlhruMtGBJEE3CeEm8nr6PJO/pub?gid=196084497&single=true&output=csv";
-const FEED_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3nqk-0k8VUtIgaR77357dukIvWCBwRs8wY4wIju32ricmg3LIEGyGMlhruMtGBJEE3CeEm8nr6PJO/pub?gid=1279537034&single=true&output=csv";
-
-const CHALLENGE_START = new Date('2026-04-15T00:00:00');
-const CHALLENGE_END = new Date('2026-05-29T23:59:59');
+import { CSV_URL, FEED_CSV_URL, REFRESH_INTERVAL_MS, CHALLENGE_START, CHALLENGE_END } from './config';
 
 // --- Utilitários ---
 const toTitleCase = (str) => {
@@ -443,38 +438,62 @@ export default function App() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const noCacheParams = { cache: 'no-store' };
-    const ts = Date.now();
+    let cancelled = false;
+    let controller = new AbortController();
 
-    const fetchRanking = fetch(`${CSV_URL}&_t=${ts}`, noCacheParams)
-      .then(r => { if (!r.ok) throw new Error("Erro Ranking"); return r.text(); })
-      .then(text => {
-        const rawData = parseCSV(text);
-        const { data: jsonData } = csvToJson(rawData);
-        if (jsonData.length === 0) throw new Error("CSV Ranking vazio.");
-        setData(jsonData);
-      });
+    const loadData = async (isInitial) => {
+      controller = new AbortController();
+      const { signal } = controller;
+      const ts = Date.now();
+      const fetchOpts = { cache: 'no-store', signal };
 
-    const fetchFeed = fetch(`${FEED_CSV_URL}&_t=${ts}`, noCacheParams)
-      .then(r => { if (!r.ok) throw new Error("Erro Feed"); return r.text(); })
-      .then(text => {
-        const rawData = parseCSV(text);
-        const { data: jsonData } = csvToJson(rawData);
-        const media = jsonData
-          .map(item => item.thumbnail_url || item.url)
-          .filter(url => url && url.length > 5)
-          .sort(() => Math.random() - 0.5) // Embaralhar os itens
-          .slice(0, 15); // Limitar a 15 itens aleatórios no DOM
-        setFeedData(media);
-      })
-      .catch(err => console.warn("Erro ao carregar feed:", err));
+      const fetchRanking = fetch(`${CSV_URL}&_t=${ts}`, fetchOpts)
+        .then(r => { if (!r.ok) throw new Error("Erro Ranking"); return r.text(); })
+        .then(text => {
+          const rawData = parseCSV(text);
+          const { data: jsonData } = csvToJson(rawData);
+          if (jsonData.length === 0) throw new Error("CSV Ranking vazio.");
+          if (!cancelled) setData(jsonData);
+        });
 
-    Promise.all([fetchRanking, fetchFeed])
-      .then(() => setLoading(false))
-      .catch(err => {
-        setError(err.message);
-        setLoading(false);
-      });
+      const fetchFeed = fetch(`${FEED_CSV_URL}&_t=${ts}`, fetchOpts)
+        .then(r => { if (!r.ok) throw new Error("Erro Feed"); return r.text(); })
+        .then(text => {
+          const rawData = parseCSV(text);
+          const { data: jsonData } = csvToJson(rawData);
+          const media = jsonData
+            .map(item => item.thumbnail_url || item.url)
+            .filter(url => url && url.length > 5)
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 15);
+          if (!cancelled) setFeedData(media);
+        })
+        .catch(err => {
+          if (err.name !== 'AbortError') console.warn("Erro ao carregar feed:", err);
+        });
+
+      try {
+        await Promise.all([fetchRanking, fetchFeed]);
+        if (!cancelled && isInitial) setLoading(false);
+      } catch (err) {
+        if (err.name === 'AbortError' || cancelled) return;
+        if (isInitial) {
+          setError(err.message);
+          setLoading(false);
+        } else {
+          console.warn("Falha no auto-refresh:", err);
+        }
+      }
+    };
+
+    loadData(true);
+    const intervalId = setInterval(() => loadData(false), REFRESH_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+      clearInterval(intervalId);
+    };
   }, []);
 
 
