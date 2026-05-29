@@ -69,6 +69,38 @@ export function IndividualPanel({ rankingData }) {
     });
   }, [allMembers, query, excludedTeams, sortBy]);
 
+  const totals = useMemo(() => {
+    const sums = {
+      s1: 0, s2: 0, s3: 0, s4: 0, s5: 0, s6: 0, s7: 0,
+      d1: 0, d2: 0, d3: 0, d4: 0, d5: 0, dr: 0, gincana: 0,
+      points: 0
+    };
+
+    filtered.forEach(m => {
+      const getVal = (v) => {
+        if (!v) return 0;
+        return parseFloat(v.toString().replace(',', '.')) || 0;
+      };
+      sums.s1 += getVal(m.weeks?.s1);
+      sums.s2 += getVal(m.weeks?.s2);
+      sums.s3 += getVal(m.weeks?.s3);
+      sums.s4 += getVal(m.weeks?.s4);
+      sums.s5 += getVal(m.weeks?.s5);
+      sums.s6 += getVal(m.weeks?.s6);
+      sums.s7 += getVal(m.weeks?.s7);
+      sums.d1 += getVal(m.challenges?.d1);
+      sums.d2 += getVal(m.challenges?.d2);
+      sums.d3 += getVal(m.challenges?.d3);
+      sums.d4 += getVal(m.challenges?.d4);
+      sums.d5 += getVal(m.challenges?.d5);
+      sums.dr += getVal(m.challenges?.dr);
+      sums.gincana += getVal(m.challenges?.gincana);
+      sums.points += m.points || 0;
+    });
+
+    return sums;
+  }, [filtered]);
+
   const toggleTeam = (teamId) => {
     setExcludedTeams((prev) => {
       const next = new Set(prev);
@@ -143,10 +175,10 @@ export function IndividualPanel({ rankingData }) {
         </div>
       </div>
 
-      <div className="overflow-auto flex-1 min-h-0">
-        <table className="w-full min-w-[1400px]">
+      <div className="overflow-auto flex-1 min-h-0 scrollbar-thin">
+        <table className="w-full min-w-[1400px] border-collapse">
           <thead className="sticky top-0 bg-[#12121a] z-10">
-            <tr className="text-[9px] uppercase tracking-widest text-gray-500 font-bold">
+            <tr className="text-[9px] uppercase tracking-widest text-gray-500 font-bold border-b border-white/[0.06]">
               <th className="px-4 py-3 text-left w-12 sticky left-0 bg-[#12121a] z-20">#</th>
               <SortableHeader field="name" label="Nome" sortBy={sortBy} setSort={setSort} align="left" className="sticky left-12 bg-[#12121a] z-20 min-w-[160px]" />
               <SortableHeader field="team" label="Time" sortBy={sortBy} setSort={setSort} align="center" className="min-w-[90px]" />
@@ -171,10 +203,10 @@ export function IndividualPanel({ rankingData }) {
             {filtered.map((m, i) => (
               <tr
                 key={`${m.teamId}-${m.memberKey}`}
-                className="border-t border-white/[0.03] hover:bg-white/[0.02] transition-colors"
+                className="border-t border-white/[0.03] hover:bg-white/[0.02] even:bg-white/[0.005] transition-colors group"
               >
-                <td className="px-4 py-2.5 text-gray-500 font-mono text-xs sticky left-0 bg-[#0e0e16] z-10">{i + 1}</td>
-                <td className="px-4 py-2.5 text-white text-sm font-semibold sticky left-12 bg-[#0e0e16] z-10 truncate">
+                <td className="px-4 py-2.5 text-gray-500 font-mono text-xs sticky left-0 bg-[#0e0e16] group-hover:bg-[#12121c] transition-colors z-10">{i + 1}</td>
+                <td className="px-4 py-2.5 text-white text-sm font-semibold sticky left-12 bg-[#0e0e16] group-hover:bg-[#12121c] transition-colors z-10 truncate">
                   {m.formattedName}
                   {m.extraPoints && m.extraPoints !== '0' && (
                     <span className="ml-2 text-[10px] font-black text-emerald-400">+{m.extraPoints}</span>
@@ -210,6 +242,32 @@ export function IndividualPanel({ rankingData }) {
               </tr>
             ))}
           </tbody>
+          <tfoot className="sticky bottom-0 bg-[#12121a] z-20 border-t-2 border-white/[0.08]">
+            <tr className="text-[10px] uppercase tracking-wider text-gray-400 font-bold bg-[#12121a]">
+              <td className="px-4 py-3 text-left sticky left-0 bg-[#12121a] border-t border-white/[0.08] z-30 font-black">TOTAL</td>
+              <td className="px-4 py-3 text-left sticky left-12 bg-[#12121a] border-t border-white/[0.08] z-30 font-black truncate">
+                SOMA FILTRADA
+              </td>
+              <td className="px-4 py-3 text-center bg-[#12121a] border-t border-white/[0.08] text-gray-600 font-mono">-</td>
+              {renderTotalCell(totals.s1)}
+              {renderTotalCell(totals.s2)}
+              {renderTotalCell(totals.s3)}
+              {renderTotalCell(totals.s4)}
+              {renderTotalCell(totals.s5)}
+              {renderTotalCell(totals.s6)}
+              {renderTotalCell(totals.s7)}
+              {renderTotalCell(totals.d1)}
+              {renderTotalCell(totals.d2)}
+              {renderTotalCell(totals.d3)}
+              {renderTotalCell(totals.d4)}
+              {renderTotalCell(totals.d5)}
+              {renderTotalCell(totals.dr)}
+              {renderTotalCell(totals.gincana)}
+              <td className="px-4 py-3 text-center font-mono font-black text-emerald-400 text-sm bg-[#12121a] border-t border-white/[0.08]">
+                {formatTotal(totals.points)}
+              </td>
+            </tr>
+          </tfoot>
         </table>
 
         {filtered.length === 0 && (
@@ -229,13 +287,32 @@ export function IndividualPanel({ rankingData }) {
   );
 }
 
+const formatTotal = (val) => {
+  if (!val) return '0';
+  return Number.isInteger(val) ? val : val.toFixed(1).replace('.', ',');
+};
+
+const renderTotalCell = (val) => {
+  const isZero = !val || val === 0;
+  return (
+    <td className="px-3 py-3 text-center font-mono text-xs bg-[#12121a] border-t border-white/[0.08]">
+      <span 
+        className="font-black" 
+        style={{ color: isZero ? '#4B5563' : '#E5E7EB' }}
+      >
+        {formatTotal(val)}
+      </span>
+    </td>
+  );
+};
+
 const renderCell = (val, teamColor) => {
   const isZero = !val || val === '0' || val === '0,0' || val === '';
   return (
     <td className="px-3 py-2.5 text-center font-mono text-xs">
       <span 
         className="font-bold" 
-        style={{ color: isZero ? '#374151' : teamColor }}
+        style={{ color: isZero ? '#4B5563' : teamColor }}
       >
         {val || '0'}
       </span>
