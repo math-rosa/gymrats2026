@@ -22,6 +22,7 @@ export function MemberTooltip({ member, accentColor, children, style }) {
     { label: 'Sem 4', value: weeks.s4 },
     { label: 'Sem 5', value: weeks.s5 },
     { label: 'Sem 6', value: weeks.s6 },
+    { label: 'Sem 7', value: weeks.s7 },
   ];
 
   return (

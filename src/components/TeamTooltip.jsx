@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
 import ReactDOM from 'react-dom';
-import { Sparkline } from './Sparkline';
 
 export function TeamTooltip({ team, accentColor, children, style }) {
   const [show, setShow] = useState(false);
@@ -23,6 +22,7 @@ export function TeamTooltip({ team, accentColor, children, style }) {
     { label: 'Sem 4', value: d.s4 },
     { label: 'Sem 5', value: d.s5 },
     { label: 'Sem 6', value: d.s6 },
+    { label: 'Sem 7', value: d.s7 },
   ];
 
   const challengesStats = [
@@ -32,6 +32,7 @@ export function TeamTooltip({ team, accentColor, children, style }) {
     { label: 'D4 - Mãe', value: d.d4 },
     { label: 'D5 - Extra', value: d.d5 },
     { label: 'D. Relâm.', value: d.dr },
+    { label: 'Gincana', value: d.gincana },
   ];
 
   const sumWeeks = weeksStats.reduce((acc, curr) => acc + (parseFloat(curr.value?.toString().replace(',', '.')) || 0), 0);
@@ -95,15 +96,6 @@ export function TeamTooltip({ team, accentColor, children, style }) {
                 ))}
               </div>
             </div>
-
-            {team.weeklySeries && team.weeklySeries.some(v => v > 0) && (
-              <div className="mt-3 pt-2 border-t border-white/[0.08]">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold">Evolu&ccedil;&atilde;o Semanal</span>
-                </div>
-                <Sparkline data={team.weeklySeries} color={accentColor} />
-              </div>
-            )}
 
             <div className="mt-2.5 pt-2 border-t border-white/[0.08] flex flex-col gap-2.5">
               <div className="flex gap-x-6">

@@ -46,7 +46,6 @@ export function Podium({ rankingData }) {
 
   return (
     <div className="flex flex-col items-center md:justify-end w-full md:h-full max-w-[1600px] mx-auto relative">
-      <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-blue-500/15 rounded-full blur-[100px] pointer-events-none z-0" />
 
       <div className="hidden md:flex items-end justify-center gap-1.5 sm:gap-2 md:gap-3 lg:gap-5 w-full h-full px-2 sm:px-6 pt-6 z-10 relative">
         {podiumRender.map((item, idx) => {
