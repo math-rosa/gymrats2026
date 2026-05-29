@@ -70,35 +70,11 @@ export function IndividualPanel({ rankingData }) {
   }, [allMembers, query, excludedTeams, sortBy]);
 
   const totals = useMemo(() => {
-    const sums = {
-      s1: 0, s2: 0, s3: 0, s4: 0, s5: 0, s6: 0, s7: 0,
-      d1: 0, d2: 0, d3: 0, d4: 0, d5: 0, dr: 0, gincana: 0,
-      points: 0
-    };
-
+    let points = 0;
     filtered.forEach(m => {
-      const getVal = (v) => {
-        if (!v) return 0;
-        return parseFloat(v.toString().replace(',', '.')) || 0;
-      };
-      sums.s1 += getVal(m.weeks?.s1);
-      sums.s2 += getVal(m.weeks?.s2);
-      sums.s3 += getVal(m.weeks?.s3);
-      sums.s4 += getVal(m.weeks?.s4);
-      sums.s5 += getVal(m.weeks?.s5);
-      sums.s6 += getVal(m.weeks?.s6);
-      sums.s7 += getVal(m.weeks?.s7);
-      sums.d1 += getVal(m.challenges?.d1);
-      sums.d2 += getVal(m.challenges?.d2);
-      sums.d3 += getVal(m.challenges?.d3);
-      sums.d4 += getVal(m.challenges?.d4);
-      sums.d5 += getVal(m.challenges?.d5);
-      sums.dr += getVal(m.challenges?.dr);
-      sums.gincana += getVal(m.challenges?.gincana);
-      sums.points += m.points || 0;
+      points += m.points || 0;
     });
-
-    return sums;
+    return { points };
   }, [filtered]);
 
   const toggleTeam = (teamId) => {
@@ -249,20 +225,20 @@ export function IndividualPanel({ rankingData }) {
                 SOMA FILTRADA
               </td>
               <td className="px-4 py-3 text-center bg-[#12121a] border-t border-white/[0.08] text-gray-600 font-mono">-</td>
-              {renderTotalCell(totals.s1)}
-              {renderTotalCell(totals.s2)}
-              {renderTotalCell(totals.s3)}
-              {renderTotalCell(totals.s4)}
-              {renderTotalCell(totals.s5)}
-              {renderTotalCell(totals.s6)}
-              {renderTotalCell(totals.s7)}
-              {renderTotalCell(totals.d1)}
-              {renderTotalCell(totals.d2)}
-              {renderTotalCell(totals.d3)}
-              {renderTotalCell(totals.d4)}
-              {renderTotalCell(totals.d5)}
-              {renderTotalCell(totals.dr)}
-              {renderTotalCell(totals.gincana)}
+              <td className="px-3 py-3 text-center bg-[#12121a] border-t border-white/[0.08] text-gray-600 font-mono">-</td>
+              <td className="px-3 py-3 text-center bg-[#12121a] border-t border-white/[0.08] text-gray-600 font-mono">-</td>
+              <td className="px-3 py-3 text-center bg-[#12121a] border-t border-white/[0.08] text-gray-600 font-mono">-</td>
+              <td className="px-3 py-3 text-center bg-[#12121a] border-t border-white/[0.08] text-gray-600 font-mono">-</td>
+              <td className="px-3 py-3 text-center bg-[#12121a] border-t border-white/[0.08] text-gray-600 font-mono">-</td>
+              <td className="px-3 py-3 text-center bg-[#12121a] border-t border-white/[0.08] text-gray-600 font-mono">-</td>
+              <td className="px-3 py-3 text-center bg-[#12121a] border-t border-white/[0.08] text-gray-600 font-mono">-</td>
+              <td className="px-3 py-3 text-center bg-[#12121a] border-t border-white/[0.08] text-gray-600 font-mono">-</td>
+              <td className="px-3 py-3 text-center bg-[#12121a] border-t border-white/[0.08] text-gray-600 font-mono">-</td>
+              <td className="px-3 py-3 text-center bg-[#12121a] border-t border-white/[0.08] text-gray-600 font-mono">-</td>
+              <td className="px-3 py-3 text-center bg-[#12121a] border-t border-white/[0.08] text-gray-600 font-mono">-</td>
+              <td className="px-3 py-3 text-center bg-[#12121a] border-t border-white/[0.08] text-gray-600 font-mono">-</td>
+              <td className="px-3 py-3 text-center bg-[#12121a] border-t border-white/[0.08] text-gray-600 font-mono">-</td>
+              <td className="px-3 py-3 text-center bg-[#12121a] border-t border-white/[0.08] text-gray-600 font-mono">-</td>
               <td className="px-4 py-3 text-center font-mono font-black text-emerald-400 text-sm bg-[#12121a] border-t border-white/[0.08]">
                 {formatTotal(totals.points)}
               </td>
@@ -292,19 +268,7 @@ const formatTotal = (val) => {
   return Number.isInteger(val) ? val : val.toFixed(1).replace('.', ',');
 };
 
-const renderTotalCell = (val) => {
-  const isZero = !val || val === 0;
-  return (
-    <td className="px-3 py-3 text-center font-mono text-xs bg-[#12121a] border-t border-white/[0.08]">
-      <span 
-        className="font-black" 
-        style={{ color: isZero ? '#4B5563' : '#E5E7EB' }}
-      >
-        {formatTotal(val)}
-      </span>
-    </td>
-  );
-};
+
 
 const renderCell = (val, teamColor) => {
   const isZero = !val || val === '0' || val === '0,0' || val === '';
