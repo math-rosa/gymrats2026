@@ -162,7 +162,6 @@ export function IndividualPanel({ rankingData }) {
               <th className="px-3 py-3 text-center w-24">D3 - Equipe</th>
               <th className="px-3 py-3 text-center w-24">D4 - Mãe</th>
               <th className="px-3 py-3 text-center w-24">D5 - Extra</th>
-              <th className="px-3 py-3 text-center w-16">D6</th>
               <th className="px-3 py-3 text-center w-24">DR - Pose</th>
               <th className="px-3 py-3 text-center w-20">Gincana</th>
               <SortableHeader field="points" label="Check-in" sortBy={sortBy} setSort={setSort} align="center" className="min-w-[90px]" />
@@ -205,7 +204,6 @@ export function IndividualPanel({ rankingData }) {
                 {renderCell(m.challenges?.d3, m.teamColor)}
                 {renderCell(m.challenges?.d4, m.teamColor)}
                 {renderCell(m.challenges?.d5, m.teamColor)}
-                {renderCell(m.challenges?.d6, m.teamColor)}
                 {renderCell(m.challenges?.dr, m.teamColor)}
                 {renderCell(m.challenges?.gincana, m.teamColor)}
                 <td className="px-4 py-2.5 text-center text-white text-sm font-bold">{m.points}</td>

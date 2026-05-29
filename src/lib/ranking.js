@@ -72,7 +72,6 @@ export const computeRanking = (data) => {
         d3: item['DESAFIO 3 - TREINO EM EQUIPE']?.trim() || '0',
         d4: item['DESAFIO 4 - MÃE']?.trim() || '0',
         d5: item['DESAFIO 5 - EXTRA']?.trim() || '0',
-        d6: item['DESAFIO 6']?.trim() || '0',
         dr: item['DESAFIO RELAMPAGO - POSE']?.trim() || '0',
         gincana: item['GINCANA']?.trim() || '0',
         ptsExtras: item['PTS EXTRAS']?.trim() || '0'
@@ -108,7 +107,6 @@ export const computeRanking = (data) => {
       d3: item['DESAFIO 3 - TREINO EM EQUIPE'] || '0',
       d4: item['DESAFIO 4 - MÃE'] || '0',
       d5: item['DESAFIO 5 - EXTRA'] || '0',
-      d6: item['DESAFIO 6'] || '0',
       dr: item['DESAFIO RELAMPAGO - POSE'] || '0',
       gincana: item['GINCANA'] || '0',
     };
