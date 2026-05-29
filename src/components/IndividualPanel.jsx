@@ -144,15 +144,28 @@ export function IndividualPanel({ rankingData }) {
       </div>
 
       <div className="overflow-auto flex-1 min-h-0">
-        <table className="w-full">
+        <table className="w-full min-w-[1400px]">
           <thead className="sticky top-0 bg-[#12121a] z-10">
             <tr className="text-[9px] uppercase tracking-widest text-gray-500 font-bold">
-              <th className="px-4 py-3 text-left w-12">#</th>
-              <SortableHeader field="name" label="Nome" sortBy={sortBy} setSort={setSort} align="left" />
-              <SortableHeader field="team" label="Time" sortBy={sortBy} setSort={setSort} align="center" />
-              <SortableHeader field="points" label="Pts" sortBy={sortBy} setSort={setSort} align="right" />
-              <SortableHeader field="km" label="KM" sortBy={sortBy} setSort={setSort} align="right" />
-              <th className="px-4 py-3 text-center w-14">Trend</th>
+              <th className="px-4 py-3 text-left w-12 sticky left-0 bg-[#12121a] z-20">#</th>
+              <SortableHeader field="name" label="Nome" sortBy={sortBy} setSort={setSort} align="left" className="sticky left-12 bg-[#12121a] z-20 min-w-[160px]" />
+              <SortableHeader field="team" label="Time" sortBy={sortBy} setSort={setSort} align="center" className="min-w-[90px]" />
+              <th className="px-3 py-3 text-center w-16">Sem 1</th>
+              <th className="px-3 py-3 text-center w-16">Sem 2</th>
+              <th className="px-3 py-3 text-center w-16">Sem 3</th>
+              <th className="px-3 py-3 text-center w-16">Sem 4</th>
+              <th className="px-3 py-3 text-center w-16">Sem 5</th>
+              <th className="px-3 py-3 text-center w-16">Sem 6</th>
+              <th className="px-3 py-3 text-center w-16">Sem 7</th>
+              <th className="px-3 py-3 text-center w-24">D1 - 100k</th>
+              <th className="px-3 py-3 text-center w-24">D2 - Conv</th>
+              <th className="px-3 py-3 text-center w-24">D3 - Equipe</th>
+              <th className="px-3 py-3 text-center w-24">D4 - Mãe</th>
+              <th className="px-3 py-3 text-center w-24">D5 - Extra</th>
+              <th className="px-3 py-3 text-center w-16">D6</th>
+              <th className="px-3 py-3 text-center w-24">DR - Pose</th>
+              <th className="px-3 py-3 text-center w-20">Gincana</th>
+              <SortableHeader field="points" label="Check-in" sortBy={sortBy} setSort={setSort} align="center" className="min-w-[90px]" />
             </tr>
           </thead>
           <tbody>
@@ -161,8 +174,8 @@ export function IndividualPanel({ rankingData }) {
                 key={`${m.teamId}-${m.memberKey}`}
                 className="border-t border-white/[0.03] hover:bg-white/[0.02] transition-colors"
               >
-                <td className="px-4 py-2.5 text-gray-500 font-mono text-xs">{i + 1}</td>
-                <td className="px-4 py-2.5 text-white text-sm font-semibold">
+                <td className="px-4 py-2.5 text-gray-500 font-mono text-xs sticky left-0 bg-[#0e0e16] z-10">{i + 1}</td>
+                <td className="px-4 py-2.5 text-white text-sm font-semibold sticky left-12 bg-[#0e0e16] z-10 truncate">
                   {m.formattedName}
                   {m.extraPoints && m.extraPoints !== '0' && (
                     <span className="ml-2 text-[10px] font-black text-emerald-400">+{m.extraPoints}</span>
@@ -180,13 +193,22 @@ export function IndividualPanel({ rankingData }) {
                     {m.teamName}
                   </span>
                 </td>
-                <td className="px-4 py-2.5 text-right text-white text-sm font-bold">{m.points}</td>
-                <td className="px-4 py-2.5 text-right text-gray-400 text-sm">{Math.round(m.km)}</td>
-                <td className="px-4 py-2.5 text-center">
-                  {m.trend === 'up' && <TrendingUp className="inline w-3.5 h-3.5 text-emerald-400" />}
-                  {m.trend === 'down' && <TrendingDown className="inline w-3.5 h-3.5 text-rose-400" />}
-                  {m.trend === 'flat' && <Minus className="inline w-3.5 h-3.5 text-gray-500" />}
-                </td>
+                {renderCell(m.weeks?.s1, m.teamColor)}
+                {renderCell(m.weeks?.s2, m.teamColor)}
+                {renderCell(m.weeks?.s3, m.teamColor)}
+                {renderCell(m.weeks?.s4, m.teamColor)}
+                {renderCell(m.weeks?.s5, m.teamColor)}
+                {renderCell(m.weeks?.s6, m.teamColor)}
+                {renderCell(m.weeks?.s7, m.teamColor)}
+                {renderCell(m.challenges?.d1, m.teamColor)}
+                {renderCell(m.challenges?.d2, m.teamColor)}
+                {renderCell(m.challenges?.d3, m.teamColor)}
+                {renderCell(m.challenges?.d4, m.teamColor)}
+                {renderCell(m.challenges?.d5, m.teamColor)}
+                {renderCell(m.challenges?.d6, m.teamColor)}
+                {renderCell(m.challenges?.dr, m.teamColor)}
+                {renderCell(m.challenges?.gincana, m.teamColor)}
+                <td className="px-4 py-2.5 text-center text-white text-sm font-bold">{m.points}</td>
               </tr>
             ))}
           </tbody>
@@ -209,7 +231,21 @@ export function IndividualPanel({ rankingData }) {
   );
 }
 
-function SortableHeader({ field, label, sortBy, setSort, align }) {
+const renderCell = (val, teamColor) => {
+  const isZero = !val || val === '0' || val === '0,0' || val === '';
+  return (
+    <td className="px-3 py-2.5 text-center font-mono text-xs">
+      <span 
+        className="font-bold" 
+        style={{ color: isZero ? '#374151' : teamColor }}
+      >
+        {val || '0'}
+      </span>
+    </td>
+  );
+};
+
+function SortableHeader({ field, label, sortBy, setSort, align, className }) {
   const active = sortBy.field === field;
   const Icon = !active ? ArrowUpDown : sortBy.dir === 'desc' ? ArrowDown : ArrowUp;
   const alignClass = align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start';
@@ -217,7 +253,7 @@ function SortableHeader({ field, label, sortBy, setSort, align }) {
 
   return (
     <th
-      className={`px-4 py-3 ${thAlign} cursor-pointer select-none hover:text-gray-300 transition-colors`}
+      className={`px-4 py-3 ${thAlign} cursor-pointer select-none hover:text-gray-300 transition-colors ${className || ''}`}
       onClick={() => setSort(field)}
     >
       <div className={`flex items-center gap-1.5 ${alignClass}`}>

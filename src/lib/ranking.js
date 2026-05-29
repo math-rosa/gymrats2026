@@ -72,6 +72,7 @@ export const computeRanking = (data) => {
         d3: item['DESAFIO 3 - TREINO EM EQUIPE']?.trim() || '0',
         d4: item['DESAFIO 4 - MÃE']?.trim() || '0',
         d5: item['DESAFIO 5 - EXTRA']?.trim() || '0',
+        d6: item['DESAFIO 6']?.trim() || '0',
         dr: item['DESAFIO RELAMPAGO - POSE']?.trim() || '0',
         gincana: item['GINCANA']?.trim() || '0',
         ptsExtras: item['PTS EXTRAS']?.trim() || '0'
@@ -101,6 +102,17 @@ export const computeRanking = (data) => {
       s7: item['SEMANA 7'] || '0',
     };
 
+    const challenges = {
+      d1: item['DESAFIO 1 - 100KM'] || '0',
+      d2: item['DESAFIO 2 - CONVIDADO'] || '0',
+      d3: item['DESAFIO 3 - TREINO EM EQUIPE'] || '0',
+      d4: item['DESAFIO 4 - MÃE'] || '0',
+      d5: item['DESAFIO 5 - EXTRA'] || '0',
+      d6: item['DESAFIO 6'] || '0',
+      dr: item['DESAFIO RELAMPAGO - POSE'] || '0',
+      gincana: item['GINCANA'] || '0',
+    };
+
     scores[teamKey].totalKm += km;
 
     const memberKey = memberName.toLowerCase();
@@ -110,6 +122,7 @@ export const computeRanking = (data) => {
       existingMember.km += km;
       if (extraPoints !== "0") existingMember.extraPoints = extraPoints;
       existingMember.weeks = weeks;
+      existingMember.challenges = challenges;
     } else {
       scores[teamKey].members.push({
         memberKey,
@@ -118,7 +131,8 @@ export const computeRanking = (data) => {
         points: points,
         km: km,
         extraPoints: extraPoints,
-        weeks: weeks
+        weeks: weeks,
+        challenges: challenges
       });
     }
   });
